@@ -167,9 +167,11 @@ def call_llm(system_prompt: str, history: list[dict]) -> str:
     except urllib.error.HTTPError as exc:
         detail = ""
         try:
-            detail = json.loads(exc.read().decode("utf-8", "replace"))
-        except Exception:
-            pass
+            raw = exc.read().decode("utf-8", "replace")
+            print(f"[groq] raw response={raw}", flush=True)
+            detail = json.loads(raw)
+        except Exception as e:
+            print(f"[groq] parse error={e}", flush=True)
         msg = "erro do fornecedor"
         if isinstance(detail, dict):
             msg = (
@@ -179,7 +181,7 @@ def call_llm(system_prompt: str, history: list[dict]) -> str:
             ) or msg
         print(f"[groq] HTTP {exc.code}: {msg}", flush=True)
         print(f"[groq] detail={detail}", flush=True)
-        raise ConfigError("provider", f"HTTP {exc.code}: {msg}") from exc
+        raise ConfigError("provider", f"HTTP {exc.code}: {msg} | detail={detail}") from exc
     except urllib.error.URLError as exc:
         raise ConfigError("network", f"Sem ligação ao fornecedor ({exc.reason}). Verifica OPENAI_BASE_URL.") from exc
     except json.JSONDecodeError as exc:
