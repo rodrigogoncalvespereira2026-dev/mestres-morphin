@@ -52,7 +52,6 @@
       <button id="send-btn" type="submit" disabled>Enviar</button>
     </form>
     <div id="footer-extras" class="footer-extras">
-      <button id="install-btn" class="footer-btn" type="button" hidden>Instalar app</button>
       <button id="clear-btn" class="footer-btn" type="button">Nova conversa</button>
       <label class="voz-auto">
         <input type="checkbox" id="voz-auto" checked> Voz automática
@@ -62,31 +61,48 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status"></div>
+
+<div id="install-banner" class="install-banner">
+  <div class="install-text">
+    <span>Instalar Mestres Morphin</span>
+    Adiciona à ecrã inicial
+  </div>
+  <button id="install-btn">Instalar</button>
+  <button id="install-dismiss">✕</button>
+</div>
+
 <script src="chat.js"></script>
 <script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
-let installPrompt;
+let deferredPrompt;
+const installBanner = document.getElementById("install-banner");
 const installBtn = document.getElementById("install-btn");
+const installDismiss = document.getElementById("install-dismiss");
 
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
-  installPrompt = e;
-  installBtn.hidden = false;
+  deferredPrompt = e;
+  installBanner.classList.add("mostrar");
 });
 
 installBtn.addEventListener("click", async () => {
-  if (!installPrompt) return;
-  installPrompt.prompt();
-  await installPrompt.userChoice;
-  installPrompt = null;
-  installBtn.hidden = true;
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBanner.classList.remove("mostrar");
+});
+
+installDismiss.addEventListener("click", () => {
+  installBanner.classList.remove("mostrar");
+  sessionStorage.setItem("installDismissed", "1");
 });
 
 window.addEventListener("appinstalled", () => {
-  installBtn.hidden = true;
+  installBanner.classList.remove("mostrar");
 });
 </script>
 </body>
