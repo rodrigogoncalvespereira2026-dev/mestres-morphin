@@ -57,11 +57,51 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status"></div>
+
+<div id="install-banner" class="install-banner">
+  <div class="install-text">
+    <span class="install-title">Instalar Mestres Morphin</span>
+    <span class="install-sub">Adiciona à ecrã inicial</span>
+  </div>
+  <button id="install-btn" class="install-btn">Instalar</button>
+  <button id="install-dismiss" class="install-dismiss">✕</button>
+</div>
+
 <script src="chat.js"></script>
 <script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
+
+let deferredPrompt;
+const installBanner = document.getElementById("install-banner");
+const installBtn = document.getElementById("install-btn");
+const installDismiss = document.getElementById("install-dismiss");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!sessionStorage.getItem("installDismissed")) {
+    installBanner.classList.add("mostrar");
+  }
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBanner.classList.remove("mostrar");
+});
+
+installDismiss.addEventListener("click", () => {
+  installBanner.classList.remove("mostrar");
+  sessionStorage.setItem("installDismissed", "1");
+});
+
+window.addEventListener("appinstalled", () => {
+  installBanner.classList.remove("mostrar");
+});
 </script>
 </body>
 </html>
