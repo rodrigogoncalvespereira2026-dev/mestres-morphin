@@ -1,0 +1,24 @@
+{
+  "name": "Mestres Morphin — IA",
+  "short_name": "Mestres Morphin",
+  "description": "Conversa com os Mestres Morphin — guerreiros-monges sábios que protegem a Rede Morphin.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e1020",
+  "theme_color": "#e6b84c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
