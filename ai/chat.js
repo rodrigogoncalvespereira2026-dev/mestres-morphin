@@ -19,10 +19,9 @@ const els = {
   form: document.getElementById("chat-form"),
   input: document.getElementById("input"),
   send: document.getElementById("send-btn"),
-  clear: document.getElementById("clear-btn"),
   banner: document.getElementById("config-banner"),
   toast: document.getElementById("toast"),
-  voiceBtn: document.getElementById("voice-btn"),
+  vozAuto: document.getElementById("voz-auto"),
 };
 
 // ---------- helpers ----------
@@ -55,37 +54,11 @@ function speak(text, masterId) {
   const voices = window.speechSynthesis.getVoices();
   const match = voices.find(v => v.name === master.voice) || voices.find(v => v.lang.startsWith("pt"));
   if (match) utter.voice = match;
-  utter.onstart = () => { state.speaking = true; updateVoiceBtn(); };
-  utter.onend = () => { state.speaking = false; updateVoiceBtn(); };
-  utter.onerror = () => { state.speaking = false; updateVoiceBtn(); };
   window.speechSynthesis.speak(utter);
 }
 
 function stopSpeaking() {
   if (window.speechSynthesis) window.speechSynthesis.cancel();
-  state.speaking = false;
-  updateVoiceBtn();
-}
-
-function toggleAutoSpeak() {
-  state.autoSpeak = !state.autoSpeak;
-  if (!state.autoSpeak) stopSpeaking();
-  updateVoiceBtn();
-  toast(state.autoSpeak ? "Voz ativada" : "Voz desativada");
-}
-
-function updateVoiceBtn() {
-  if (!els.voiceBtn) return;
-  if (state.speaking) {
-    els.voiceBtn.textContent = "⏸";
-    els.voiceBtn.title = "Parar voz";
-  } else if (state.autoSpeak) {
-    els.voiceBtn.textContent = "🔊";
-    els.voiceBtn.title = "Voz ativada — clicar para desativar";
-  } else {
-    els.voiceBtn.textContent = "🔇";
-    els.voiceBtn.title = "Voz desativada — clicar para ativar";
-  }
 }
 
 // Load voices
@@ -299,7 +272,8 @@ els.input.addEventListener("keydown", (e) => {
     send();
   }
 });
-els.clear.addEventListener("click", () => {
+
+document.getElementById("clear-btn").addEventListener("click", () => {
   if (!state.activeId) return;
   delete state.histories[state.activeId];
   stopSpeaking();
@@ -308,13 +282,10 @@ els.clear.addEventListener("click", () => {
   els.input.focus();
 });
 
-if (els.voiceBtn) {
-  els.voiceBtn.addEventListener("click", () => {
-    if (state.speaking) {
-      stopSpeaking();
-    } else {
-      toggleAutoSpeak();
-    }
+if (els.vozAuto) {
+  els.vozAuto.addEventListener("change", () => {
+    state.autoSpeak = els.vozAuto.checked;
+    if (!state.autoSpeak) stopSpeaking();
   });
 }
 
