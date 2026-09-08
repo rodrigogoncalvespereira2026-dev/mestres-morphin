@@ -145,6 +145,7 @@ def call_llm(system_prompt: str, history: list[dict]) -> str:
     if not API_KEY:
         raise ConfigError("missing_key", "OPENAI_API_KEY não está definida. Cria o ficheiro .env.local na raiz do projeto (ver README) e reinicia o servidor.")
     url = (BASE_URL.rstrip("/") or "https://api.openai.com/v1") + "/chat/completions"
+    print(f"[debug] url={url} model={MODEL} key={API_KEY[:8]}...", flush=True)
     messages = [{"role": "system", "content": system_prompt}] + history
     payload = {
         "model": MODEL,
@@ -177,6 +178,7 @@ def call_llm(system_prompt: str, history: list[dict]) -> str:
                 else detail.get("message")
             ) or msg
         print(f"[groq] HTTP {exc.code}: {msg}", flush=True)
+        print(f"[groq] detail={detail}", flush=True)
         raise ConfigError("provider", f"HTTP {exc.code}: {msg}") from exc
     except urllib.error.URLError as exc:
         raise ConfigError("network", f"Sem ligação ao fornecedor ({exc.reason}). Verifica OPENAI_BASE_URL.") from exc
