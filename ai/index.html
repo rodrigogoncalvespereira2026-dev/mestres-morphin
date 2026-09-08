@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mestres Morphin — Conselho de IA</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <p class="kicker">Power Rangers Primal Force</p>
+  <h1>Mestres Morphin <span class="thin">· IA</span></h1>
+  <p class="sub">Escolhe um Mestre e fala com ele. Cada Mestre usa o seu
+  próprio "cérebro" — o prompt de sistema guardado nesta pasta.</p>
+</header>
+
+<div id="config-banner" class="banner hidden" role="alert">
+  <strong>API ainda não configurada.</strong>
+  Cria o ficheiro <code>.env.local</code> na raiz do projeto com
+  <code>OPENAI_API_KEY=...</code> (e opcionalmente
+  <code>OPENAI_BASE_URL</code> / <code>OPENAI_MODEL</code>), depois reinicia
+  o servidor. Enquanto isso, podes navegar mas as respostas não chegam.
+</div>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Mestres">
+    <p class="side-label">Os vinte Mestres</p>
+    <div id="master-list" class="master-list"></div>
+    <p class="side-note">6 desenvolvidos · 14 por criar</p>
+  </aside>
+
+  <main class="chat" aria-live="polite">
+    <div id="chat-header" class="chat-header">
+      <span id="chat-dot" class="dot"></span>
+      <div>
+        <h2 id="chat-name">Mestre Morphin</h2>
+        <p id="chat-meta" class="meta">Aguarda a tua pergunta.</p>
+      </div>
+      <button id="clear-btn" class="ghost" title="Reiniciar conversa">↺ reiniciar</button>
+      <button id="voice-btn" class="ghost voice-btn" title="Voz ativada — clicar para desativar">🔊</button>
+    </div>
+    <div id="messages" class="messages"></div>
+    <form id="chat-form" class="composer" autocomplete="off">
+      <textarea id="input" rows="1" placeholder="Fala com o Mestre…"
+        aria-label="A tua mensagem"></textarea>
+      <button id="send-btn" type="submit" disabled>Enviar</button>
+    </form>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden" role="status"></div>
+<script src="chat.js"></script>
+</body>
+</html>
