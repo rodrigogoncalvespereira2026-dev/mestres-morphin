@@ -176,6 +176,7 @@ def call_llm(system_prompt: str, history: list[dict]) -> str:
                 if isinstance(detail.get("error"), dict)
                 else detail.get("message")
             ) or msg
+        print(f"[groq] HTTP {exc.code}: {msg}", flush=True)
         raise ConfigError("provider", f"HTTP {exc.code}: {msg}") from exc
     except urllib.error.URLError as exc:
         raise ConfigError("network", f"Sem ligação ao fornecedor ({exc.reason}). Verifica OPENAI_BASE_URL.") from exc
