@@ -114,6 +114,16 @@ def load_env_file() -> dict:
 
 _FILE_ENV = load_env_file()
 
+LORE_COMUM = ROOT.parent / "lore-comum.md"
+
+
+def load_lore_comum() -> str:
+    """Lore comum do universo, partilhado com os outros personagens (pasta-mãe)."""
+    try:
+        return LORE_COMUM.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
 
 def cfg(name: str, default: str | None = None) -> str | None:
     value = os.environ.get(name) or _FILE_ENV.get(name)
@@ -139,7 +149,12 @@ CONTENT_TYPES = {
 def read_prompt(master_id: str) -> str:
     master = MASTER_BY_ID[master_id]
     path = ROOT / master["file"]
-    return path.read_text(encoding="utf-8")
+    prompt = path.read_text(encoding="utf-8")
+    # Prompt próprio do Mestre + lore comum do universo (pasta-mãe).
+    lore = load_lore_comum()
+    if lore:
+        prompt = prompt + "\n\n---\n\n" + lore
+    return prompt
 
 
 def call_llm(system_prompt: str, history: list[dict]) -> str:
