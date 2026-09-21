@@ -21,7 +21,9 @@ const els = {
   send: document.getElementById("send-btn"),
   banner: document.getElementById("config-banner"),
   toast: document.getElementById("toast"),
-  vozAuto: document.getElementById("voz-auto"),
+  vozBtn: document.getElementById("voz-btn"),
+  vozTxt: document.getElementById("voz-txt"),
+  vozIc: document.getElementById("voz-ic"),
 };
 
 // ---------- helpers ----------
@@ -42,29 +44,83 @@ function scrollDown() {
   els.messages.scrollTop = els.messages.scrollHeight;
 }
 
-// ---------- speech synthesis ----------
-function speak(text, masterId) {
-  if (!state.autoSpeak || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const master = state.masters.find(m => m.id === masterId);
-  if (!master) return;
+// ---------- voz (mesmo sistema do Alpha) ----------
+// Síntese do próprio browser, a falar sozinha cada resposta.
+const synth = window.speechSynthesis;
+
+// O browser só deixa sintetizar depois de um gesto do utilizador: até lá a
+// resposta fica em espera e sai no primeiro toque/tecla.
+let vozBloqueada = true;
+let vozPendente = null;
+
+// Tom de cada Mestre: mantém as vozes distinguíveis mesmo quando o browser
+// não tem a voz pedida instalada (aí cai na voz pt por omissão).
+const TOM_MESTRE = {
+  Duarte: { pitch: 0.9, rate: 0.85 },
+  Miguel: { pitch: 0.95, rate: 0.87 },
+  Antonio: { pitch: 0.92, rate: 0.86 },
+  Euclides: { pitch: 1.0, rate: 0.85 },
+  Raquel: { pitch: 1.25, rate: 0.9 },
+  Francisca: { pitch: 1.2, rate: 0.88 },
+};
+
+function escolherVoz(master) {
+  if (!synth) return null;
+  const vozes = synth.getVoices();
+  const nome = ((master && master.voiceName) || "").toLowerCase();
+  if (nome) {
+    const exata = vozes.find((v) => v.name.toLowerCase().includes(nome));
+    if (exata) return exata;
+  }
+  return (
+    vozes.find((v) => v.lang.includes("pt") && v.name.includes("Google")) ||
+    vozes.find((v) => v.lang.includes("pt")) ||
+    vozes.find((v) => v.lang.includes("es")) ||
+    null
+  );
+}
+
+function speak(text, masterId, forcar = false) {
+  if (!text || !synth) return;
+  if (!forcar && !state.autoSpeak) return;
+  if (vozBloqueada) {
+    vozPendente = { text, masterId };
+    return;
+  }
+  const master = state.masters.find((m) => m.id === masterId) || null;
+  synth.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "pt-PT";
-  utter.rate = 0.9;
-  const voices = window.speechSynthesis.getVoices();
-  const match = voices.find(v => v.name === master.voice) || voices.find(v => v.lang.startsWith("pt"));
+  const tom = TOM_MESTRE[(master && master.voiceName) || ""] || { pitch: 1.1, rate: 0.85 };
+  utter.rate = tom.rate;
+  utter.pitch = tom.pitch;
+  utter.volume = 1.0;
+  const match = escolherVoz(master);
   if (match) utter.voice = match;
-  window.speechSynthesis.speak(utter);
+  synth.speak(utter);
 }
 
 function stopSpeaking() {
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (synth) synth.cancel();
+  vozPendente = null;
 }
 
-// Load voices
-if (window.speechSynthesis) {
-  window.speechSynthesis.onvoiceschanged = () => {};
-  window.speechSynthesis.getVoices();
+function desbloquearVoz() {
+  if (!vozBloqueada) return;
+  vozBloqueada = false;
+  const p = vozPendente;
+  vozPendente = null;
+  if (p) speak(p.text, p.masterId, true);
+}
+
+["pointerdown", "click", "keydown", "touchstart"].forEach((ev) => {
+  window.addEventListener(ev, desbloquearVoz, { once: true, passive: true });
+});
+
+// O Chrome carrega a lista de vozes de forma assíncrona: aquece-a já.
+if (synth) {
+  synth.addEventListener("voiceschanged", () => {});
+  synth.getVoices();
 }
 
 function addBubble(role, content, who) {
@@ -118,7 +174,8 @@ function renderList() {
     dot.className = "dot";
     const name = document.createElement("span");
     name.className = "mname";
-    name.textContent = m.name;
+    // Nome curto na lista lateral (o nome completo aparece no cabeçalho do chat).
+    name.textContent = m.short || m.name;
     const badge = document.createElement("span");
     badge.className = "badge " + m.status;
     badge.textContent = m.status === "canónico" ? "canónico" : "rascunho";
@@ -282,11 +339,19 @@ document.getElementById("clear-btn").addEventListener("click", () => {
   els.input.focus();
 });
 
-if (els.vozAuto) {
-  els.vozAuto.addEventListener("change", () => {
-    state.autoSpeak = els.vozAuto.checked;
-    if (!state.autoSpeak) stopSpeaking();
-  });
+// Interruptor da voz: ligada/desligada.
+function atualizarBotaoVoz() {
+  els.vozBtn.setAttribute("aria-pressed", String(state.autoSpeak));
+  els.vozTxt.textContent = state.autoSpeak ? "Voz ligada" : "Voz desligada";
+  els.vozIc.textContent = state.autoSpeak ? "🔊" : "🔇";
 }
+
+els.vozBtn.addEventListener("click", () => {
+  state.autoSpeak = !state.autoSpeak;
+  atualizarBotaoVoz();
+  if (!state.autoSpeak) stopSpeaking();
+});
+
+atualizarBotaoVoz();
 
 boot();

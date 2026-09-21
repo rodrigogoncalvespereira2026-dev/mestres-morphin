@@ -3,10 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#0e1020">
+<meta name="theme-color" content="#070818">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mestres Morphin">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -15,49 +18,74 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="hero">
-  <p class="kicker">Power Rangers Primal Force</p>
-  <h1>Mestres Morphin <span class="thin">· IA</span></h1>
-  <p class="sub">Escolhe um Mestre e fala com ele. Cada Mestre usa o seu
-  próprio "cérebro" — o prompt de sistema guardado nesta pasta.</p>
-</header>
-
-<div id="config-banner" class="banner hidden" role="alert">
-  <strong>API ainda não configurada.</strong>
-  No painel do Render, vai a <code>Environment</code> e adiciona
-  <code>OPENAI_API_KEY</code> (e opcionalmente
-  <code>OPENAI_BASE_URL</code> / <code>OPENAI_MODEL</code>), depois faz redeploy.
-  Enquanto isso, podes navegar mas as respostas não chegam.
+<div class="fx" aria-hidden="true">
+  <div class="fx-grid"></div>
+  <div class="fx-orb fx-orb--gold"></div>
+  <div class="fx-orb fx-orb--violet"></div>
 </div>
 
-<div class="layout">
-  <aside class="sidebar" aria-label="Mestres">
-    <p class="side-label">Os vinte Mestres</p>
-    <div id="master-list" class="master-list"></div>
-    <p class="side-note">6 desenvolvidos · 14 por criar</p>
-  </aside>
+<div class="app">
+  <header class="hero">
+    <p class="kicker"><span class="led"></span> Power Rangers Primal Force</p>
+    <h1>Mestres Morphin <span class="thin">/ IA</span></h1>
+    <p class="sub">Escolhe um Mestre e fala com ele. Cada Mestre usa o seu próprio
+    "cérebro" — o prompt de sistema guardado nesta pasta.</p>
+    <div class="hero-stats">
+      <span class="chip"><b>MODELO</b> <span id="hero-model-name">—</span></span>
+      <span class="chip"><b>VOZ</b> Cada Mestre tem a sua</span>
+    </div>
+    <span class="corner corner--tl" aria-hidden="true"></span>
+    <span class="corner corner--br" aria-hidden="true"></span>
+  </header>
 
-  <main class="chat" aria-live="polite">
-    <div id="chat-header" class="chat-header">
-      <span id="chat-dot" class="dot"></span>
-      <div>
-        <h2 id="chat-name">Mestre Morphin</h2>
-        <p id="chat-meta" class="meta">Aguarda a tua pergunta.</p>
+  <div id="config-banner" class="banner hidden" role="alert">
+    <strong>API ainda não configurada.</strong>
+    No painel do Render, vai a <code>Environment</code> e adiciona
+    <code>OPENAI_API_KEY</code> (e opcionalmente
+    <code>OPENAI_BASE_URL</code> / <code>OPENAI_MODEL</code>), depois faz redeploy.
+    Enquanto isso, podes navegar mas as respostas não chegam.
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Mestres">
+      <div class="side-head">
+        <p class="side-label">Os vinte Mestres</p>
+        <p class="side-count">6 desenvolvidos · 14 por criar</p>
       </div>
-    </div>
-    <div id="messages" class="messages"></div>
-    <form id="chat-form" class="composer" autocomplete="off">
-      <textarea id="input" rows="1" placeholder="Fala com o Mestre…"
-        aria-label="A tua mensagem"></textarea>
-      <button id="send-btn" type="submit" disabled>Enviar</button>
-    </form>
-    <div id="footer-extras" class="footer-extras">
-      <button id="clear-btn" class="footer-btn" type="button">Nova conversa</button>
-      <label class="voz-auto">
-        <input type="checkbox" id="voz-auto" checked> Voz automática
-      </label>
-    </div>
-  </main>
+      <div id="master-list" class="master-list"></div>
+    </aside>
+
+    <main class="chat" aria-live="polite">
+      <div id="chat-header" class="chat-header">
+        <span id="chat-dot" class="dot"></span>
+        <div>
+          <h2 id="chat-name">Mestre Morphin</h2>
+          <p id="chat-meta" class="meta">Aguarda a tua pergunta.</p>
+        </div>
+      </div>
+      <div id="messages" class="messages"></div>
+      <form id="chat-form" class="composer" autocomplete="off">
+        <textarea id="input" rows="1" placeholder="Fala com o Mestre…"
+          aria-label="A tua mensagem"></textarea>
+        <button id="send-btn" type="submit" disabled>
+          <span>Enviar</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 11.5 20.5 3 13 20.5l-2.6-6.4L3 11.5Z" fill="currentColor"/></svg>
+        </button>
+      </form>
+      <!-- Barra de ações: mesma ordem em todos os personagens -->
+      <nav class="acoes" aria-label="Ações">
+        <button id="voz-btn" class="acao" type="button" aria-pressed="true"
+                title="O Mestre lê cada resposta em voz alta">
+          <span id="voz-ic" class="ic" aria-hidden="true">🔊</span>
+          <span id="voz-txt">Voz ligada</span>
+        </button>
+        <button id="clear-btn" class="acao" type="button">
+          <span class="ic" aria-hidden="true">✨</span>
+          Nova conversa
+        </button>
+      </nav>
+    </main>
+  </div>
 </div>
 
 <div id="toast" class="toast hidden" role="status"></div>
@@ -104,6 +132,16 @@ installDismiss.addEventListener("click", () => {
 window.addEventListener("appinstalled", () => {
   installBanner.classList.remove("mostrar");
 });
+
+// Mostra o modelo configurado no chip do hero (informativo).
+fetch("/api/masters")
+  .then((r) => r.json())
+  .then((data) => {
+    const name = (data && data.config && data.config.model) || "—";
+    const el = document.getElementById("hero-model-name");
+    if (el) el.textContent = name;
+  })
+  .catch(() => {});
 </script>
 </body>
 </html>
