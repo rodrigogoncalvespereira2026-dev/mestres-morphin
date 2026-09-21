@@ -273,11 +273,81 @@ body {
 }
 
 .chat-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 15px 18px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
   background: rgba(255, 255, 255, .02);
+}
+.chat-head-info { min-width: 0; }
+.chat-head-title { display: flex; align-items: center; gap: 9px; }
+
+/* Cara animada (cara.js) — o retrato do Mestre escolhido, na cor dele. */
+.cara {
+  flex: 0 0 auto;
+  width: 66px;
+  aspect-ratio: 300 / 280;
+  height: auto;
+  display: block;
+}
+.reacoes-btn { margin-left: auto; }
+
+/* ── Painel de reações (gaveta que sobe por baixo) ────────────────── */
+.reacoes {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  max-height: 60vh;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(0deg, rgba(7, 8, 24, .99), rgba(12, 14, 34, .96));
+  border-top: 1px solid var(--line-2);
+  border-radius: 18px 18px 0 0;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .6), 0 -18px 50px rgba(0, 0, 0, .6);
+  animation: reacoesSobe .22s ease;
+}
+.reacoes[hidden] { display: none !important; }
+@keyframes reacoesSobe {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.reacoes-topo { display: flex; align-items: center; gap: 10px; }
+.reacoes-topo strong {
+  font-family: var(--mono); font-size: .62rem;
+  letter-spacing: .24em; color: var(--accent);
+}
+.reacoes-topo small { flex: 1; font-size: .62rem; color: var(--muted); }
+.reacoes-fechar {
+  flex: 0 0 28px; height: 28px; border-radius: 9px;
+  background: rgba(255, 255, 255, .05); border: 1px solid var(--line);
+  color: var(--muted); cursor: pointer; font-size: .72rem;
+}
+.reacoes-fechar:hover { color: var(--ink); border-color: var(--accent); }
+.reacoes-grelha {
+  display: grid; gap: 8px;
+  /* Seis por linha no ecrã largo: duas filas certinhas com as 12 expressões. */
+  grid-template-columns: repeat(6, 1fr);
+  overflow-y: auto; padding-bottom: 2px;
+  scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+}
+.reacao {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 3px; border-radius: 12px;
+  background: rgba(21, 27, 35, .85); border: 1px solid var(--line);
+  color: var(--muted); font-family: var(--mono);
+  font-size: .5rem; letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .18s, border-color .25s, box-shadow .25s, color .25s;
+}
+.reacao canvas { width: 100%; height: auto; max-width: 84px; display: block; }
+.reacao span {
+  max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.reacao:hover { border-color: var(--accent); transform: translateY(-2px); }
+.reacao:active { transform: scale(.96); }
+.reacao[aria-pressed="true"] {
+  border-color: var(--accent); color: var(--accent);
+  box-shadow: 0 0 18px -6px var(--accent);
 }
 .chat-header .dot {
   width: 12px; height: 12px; border-radius: 50%;
@@ -525,8 +595,13 @@ body {
   .side-count { display: none; }
 
   .chat { flex: 1; border-radius: 16px; }
-  .chat-header { padding: 12px 14px; }
+  .chat-header { padding: 10px 12px; gap: 10px; }
   .chat-header h2 { font-size: .95rem; }
+  .cara { width: 54px; }
+  .reacoes-btn .rotulo { display: none; }
+  .reacoes-btn { padding: 7px 10px; }
+  .reacoes-grelha { grid-template-columns: repeat(4, 1fr); }
+  .reacao canvas { max-width: 68px; }
   .messages { padding: 14px 12px; gap: 11px; }
   .msg .bubble { max-width: 90%; font-size: .9rem; padding: 11px 13px; }
   .composer { padding: 10px 12px; gap: 8px; }
@@ -535,4 +610,8 @@ body {
   .composer button span { display: none; }
   .acoes { padding: 9px 12px; gap: 6px; }
   .acao { padding: 7px 11px; letter-spacing: .1em; }
+}
+
+@media (max-width: 400px) {
+  .reacoes-grelha { grid-template-columns: repeat(3, 1fr); }
 }

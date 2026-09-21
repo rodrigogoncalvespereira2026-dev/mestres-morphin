@@ -97,12 +97,16 @@ function speak(text, masterId, forcar = false) {
   utter.volume = 1.0;
   const match = escolherVoz(master);
   if (match) utter.voice = match;
+  utter.onstart = () => cara?.estado("falar");
+  utter.onend = () => cara?.estado("espera");
+  utter.onerror = () => cara?.estado("espera");
   synth.speak(utter);
 }
 
 function stopSpeaking() {
   if (synth) synth.cancel();
   vozPendente = null;
+  cara?.estado("espera");
 }
 
 function desbloquearVoz() {
@@ -122,6 +126,92 @@ if (synth) {
   synth.addEventListener("voiceschanged", () => {});
   synth.getVoices();
 }
+
+// ---------- cara (cara.js) ----------
+// O retrato do Mestre escolhido, irmão da cara do Alpha: pensa enquanto
+// espera, fala com a boca enquanto a voz fala e muda de cor com o Mestre.
+const cara = window.CaraPrimal
+  ? CaraPrimal.criar(document.getElementById("cara"), { variante: "mestre" })
+  : null;
+
+// ---------- painel de reações (escolher a expressão à mão) ----------
+// Como o do Alpha: cada azulejo é uma cara parada com a expressão já aplicada,
+// e tocar nele mostra-a na cara do Mestre. A grelha refaz-se ao trocar de
+// Mestre, para o visor e a pedra ficarem na cor dele.
+const ROTULOS = {
+  feliz: "Feliz!",
+  rir: "A rir!",
+  amor: "Amor!",
+  envergonhado: "Envergonhado...",
+  piscadela: "Piscadela ;)",
+  desconfiado: "Desconfiado...",
+  determinado: "Determinado!",
+  surpreso: "Surpreso!",
+  confuso: "Confuso...",
+  triste: "Triste...",
+  zangado: "Zangado!",
+  sono: "Com sono...",
+};
+
+const painelReacoes = document.getElementById("reacoes");
+const grelhaReacoes = document.getElementById("reacoes-grelha");
+const botaoReacoes = document.getElementById("reacoes-btn");
+let grelhaFeita = false;
+
+function construirGrelha() {
+  if (!cara || !window.CaraPrimal || !state.masters.length) return;
+  const master = activeMaster();
+  grelhaReacoes.innerHTML = "";
+  for (const nome of CaraPrimal.expressoes) {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "reacao";
+    botao.title = nome;
+    botao.setAttribute("aria-pressed", "false");
+
+    const miniatura = document.createElement("canvas");
+    miniatura.width = 300;
+    miniatura.height = 280;
+    miniatura.setAttribute("aria-hidden", "true");
+    // Uma cara parada por azulejo (12 a animar ao mesmo tempo seria demais).
+    CaraPrimal.criar(miniatura, {
+      variante: "mestre",
+      cor: master ? master.color : null,
+      estatico: nome,
+      densidade: 1,
+    });
+
+    const rotulo = document.createElement("span");
+    rotulo.textContent = ROTULOS[nome] || nome;
+
+    botao.append(miniatura, rotulo);
+    botao.addEventListener("click", () => escolherReacao(nome, botao));
+    grelhaReacoes.appendChild(botao);
+  }
+  grelhaFeita = true;
+}
+
+function escolherReacao(nome, botao) {
+  cara?.expressao(nome, 3500);
+  for (const outro of grelhaReacoes.querySelectorAll(".reacao")) {
+    outro.setAttribute("aria-pressed", String(outro === botao));
+  }
+}
+
+function abrirReacoes(abrir) {
+  painelReacoes.hidden = !abrir;
+  botaoReacoes.setAttribute("aria-expanded", String(abrir));
+  if (abrir) construirGrelha();
+}
+
+botaoReacoes.addEventListener("click", () => abrirReacoes(painelReacoes.hidden));
+document.getElementById("reacoes-fechar").addEventListener("click", () => {
+  abrirReacoes(false);
+  botaoReacoes.focus();
+});
+document.addEventListener("keydown", (evento) => {
+  if (evento.key === "Escape" && !painelReacoes.hidden) abrirReacoes(false);
+});
 
 function addBubble(role, content, who) {
   const wrap = document.createElement("div");
@@ -191,6 +281,10 @@ function selectMaster(id) {
   const m = activeMaster();
   if (!m) return;
   document.documentElement.style.setProperty("--accent", m.color);
+  cara?.estado("espera");
+  cara?.cor(m.color);
+  // As miniaturas do painel seguem a cor do Mestre escolhido.
+  if (grelhaFeita) construirGrelha();
   els.dot.style.background = m.color;
   els.dot.style.boxShadow = "0 0 12px " + m.color;
   els.name.textContent = m.name;
@@ -246,6 +340,7 @@ async function send() {
   renderMessages();
   state.busy = true;
   updateSend();
+  cara?.estado("pensar");
   typingIndicator();
 
   try {
@@ -261,9 +356,12 @@ async function send() {
     removeTyping();
     hist.push({ role: "assistant", content: data.reply || "" });
     renderMessages();
+    cara?.estado("espera");
+    cara?.humor(data.reply);
     speak(data.reply, master.id);
   } catch (err) {
     removeTyping();
+    cara?.estado("espera");
     const who = master.name;
     const wrap = document.createElement("div");
     wrap.className = "msg err";
@@ -334,6 +432,7 @@ document.getElementById("clear-btn").addEventListener("click", () => {
   if (!state.activeId) return;
   delete state.histories[state.activeId];
   stopSpeaking();
+  cara?.estado("espera");
   renderMessages();
   toast("Conversa reiniciada.");
   els.input.focus();

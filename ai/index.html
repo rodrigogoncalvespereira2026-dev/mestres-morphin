@@ -57,11 +57,21 @@
 
     <main class="chat" aria-live="polite">
       <div id="chat-header" class="chat-header">
-        <span id="chat-dot" class="dot"></span>
-        <div>
-          <h2 id="chat-name">Mestre Morphin</h2>
+        <!-- Cara do Mestre escolhido: mesma linguagem do Alpha (cara.js),
+             com a cor própria de cada Mestre. -->
+        <canvas id="cara" class="cara" width="300" height="280" aria-hidden="true"></canvas>
+        <div class="chat-head-info">
+          <div class="chat-head-title">
+            <span id="chat-dot" class="dot"></span>
+            <h2 id="chat-name">Mestre Morphin</h2>
+          </div>
           <p id="chat-meta" class="meta">Aguarda a tua pergunta.</p>
         </div>
+        <button id="reacoes-btn" class="acao reacoes-btn" type="button"
+                aria-expanded="false" aria-controls="reacoes">
+          <span class="ic" aria-hidden="true">🎭</span>
+          <span class="rotulo">Reações</span>
+        </button>
       </div>
       <div id="messages" class="messages"></div>
       <form id="chat-form" class="composer" autocomplete="off">
@@ -88,6 +98,16 @@
   </div>
 </div>
 
+<!-- Painel de reações: escolher a expressão do Mestre à mão -->
+<section id="reacoes" class="reacoes" aria-label="Reações" hidden>
+  <div class="reacoes-topo">
+    <strong>REAÇÕES</strong>
+    <small>Toca numa para a veres na cara do Mestre</small>
+    <button id="reacoes-fechar" class="reacoes-fechar" type="button" aria-label="Fechar reações">✕</button>
+  </div>
+  <div id="reacoes-grelha" class="reacoes-grelha"></div>
+</section>
+
 <div id="toast" class="toast hidden" role="status"></div>
 
 <div id="install-banner" class="install-banner">
@@ -99,6 +119,7 @@
   <button id="install-dismiss">✕</button>
 </div>
 
+<script src="cara.js"></script>
 <script src="chat.js"></script>
 <script>
 if ("serviceWorker" in navigator) {
