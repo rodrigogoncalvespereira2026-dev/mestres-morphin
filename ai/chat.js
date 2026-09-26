@@ -73,6 +73,9 @@ const TOM_MESTRE = {
   Leila: { pitch: 1.08, rate: 0.85 },
   Fabio: { pitch: 0.9, rate: 0.86 },
   Julio: { pitch: 1.05, rate: 0.92 },
+  Donato: { pitch: 0.85, rate: 0.82 },
+  Giovanna: { pitch: 1.06, rate: 0.84 },
+  Elza: { pitch: 1.1, rate: 0.88 },
 };
 
 function escolherVoz(master) {
