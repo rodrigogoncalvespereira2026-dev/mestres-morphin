@@ -1,4 +1,4 @@
-const CACHE = "mestres-morphin-v4";
+const CACHE = "mestres-morphin-v5";
 const ASSETS = [
   "/",
   "/index.html",

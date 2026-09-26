@@ -6,9 +6,9 @@ seres antigos que protegem a Rede Morphin.
 ## Conceito
 
 - Existem **20 Mestres Morphin** no total — um por cada cor de Ranger da série.
-- Os **6 principais** estão desenvolvidos: Vermelho, Rosa, Azul,
-  Verde, Preto, Dourado (ficheiros nesta pasta).
-- Os restantes **14** ainda não foram criados e serão adicionados mais tarde,
+- Os **8 principais** estão desenvolvidos: Vermelho, Rosa, Azul,
+  Verde, Preto, Dourado, Ciano, Laranja (ficheiros nesta pasta).
+- Os restantes **12** ainda não foram criados e serão adicionados mais tarde,
   seguindo a mesma estrutura de prompt.
 - Todos os Mestres partilham uma base comum: são guerreiros-monges serenos
   e sábios, foram criados pelo Roro (Ranger Vermelho), e tratam-no com
@@ -25,8 +25,10 @@ seres antigos que protegem a Rede Morphin.
 | `mestre-verde.md` | Mestre Verde | ✅ Canónico |
 | `mestre-preto.md` | Mestre Preto | ✅ Canónico |
 | `mestre-dourado.md` | Mestre Dourado | ✅ Canónico |
-| `modelo-mestre.md` | (modelo para os 14 restantes) | 📋 Template |
-| — os outros 14 — | Prata, Laranja, etc. | ⏳ Por criar |
+| `mestre-ciano.md` | Mestre Ciano | ✅ Canónico |
+| `mestre-laranja.md` | Mestre Laranja | ✅ Canónico |
+| `modelo-mestre.md` | (modelo para os 12 restantes) | 📋 Template |
+| — os outros 12 — | Prata, etc. | ⏳ Por criar |
 
 ## Estrutura de um prompt de Mestre
 

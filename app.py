@@ -95,6 +95,26 @@ MASTERS = [
         "voice": "pt-BR-FranciscaNeural",
         "voiceName": "Francisca",
     },
+    {
+        "id": "ciano",
+        "file": "mestre-ciano.md",
+        "name": "Mestre Morphin Ciano",
+        "short": "Ciano",
+        "color": "#37e6e6",
+        "status": "canónico",
+        "voice": "pt-PT-MatildeNeural",
+        "voiceName": "Matilde",
+    },
+    {
+        "id": "laranja",
+        "file": "mestre-laranja.md",
+        "name": "Mestre Morphin Laranja",
+        "short": "Laranja",
+        "color": "#ff8a1f",
+        "status": "canónico",
+        "voice": "pt-BR-ThalitaMultilingualNeural",
+        "voiceName": "Thalita",
+    },
 ]
 
 MASTER_BY_ID = {m["id"]: m for m in MASTERS}

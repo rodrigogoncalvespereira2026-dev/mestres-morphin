@@ -62,6 +62,8 @@ const TOM_MESTRE = {
   Euclides: { pitch: 1.0, rate: 0.85 },
   Raquel: { pitch: 1.25, rate: 0.9 },
   Francisca: { pitch: 1.2, rate: 0.88 },
+  Matilde: { pitch: 1.1, rate: 0.84 },
+  Thalita: { pitch: 1.15, rate: 0.9 },
 };
 
 function escolherVoz(master) {
