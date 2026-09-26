@@ -64,6 +64,9 @@ const TOM_MESTRE = {
   Francisca: { pitch: 1.2, rate: 0.88 },
   Matilde: { pitch: 1.1, rate: 0.84 },
   Thalita: { pitch: 1.15, rate: 0.9 },
+  Valerio: { pitch: 0.88, rate: 0.84 },
+  Yara: { pitch: 1.12, rate: 0.87 },
+  Nicolau: { pitch: 0.9, rate: 0.83 },
 };
 
 function escolherVoz(master) {

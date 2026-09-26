@@ -24,6 +24,9 @@ PAGES = [
     ("mestre-dourado.md", "Mestre Dourado", "#f0c94f"),
     ("mestre-ciano.md", "Mestre Ciano", "#37e6e6"),
     ("mestre-laranja.md", "Mestre Laranja", "#ff8a1f"),
+    ("mestre-grafite.md", "Mestre Grafite", "#8d939b"),
+    ("mestre-purpura.md", "Mestre Púrpura", "#9b59d0"),
+    ("mestre-prateado.md", "Mestre Prateado", "#c9ced6"),
     ("modelo-mestre.md", "Modelo — Mestre [COR]", "#b9c0c8"),
 ]
 
