@@ -175,6 +175,36 @@ MASTERS = [
         "voice": "pt-BR-LeticiaNeural",
         "voiceName": "Leticia",
     },
+    {
+        "id": "aqua",
+        "file": "mestre-aqua.md",
+        "name": "Mestre Morphin Aqua",
+        "short": "Aqua",
+        "color": "#4fc3e8",
+        "status": "canónico",
+        "voice": "pt-BR-LeilaNeural",
+        "voiceName": "Leila",
+    },
+    {
+        "id": "magenta",
+        "file": "mestre-magenta.md",
+        "name": "Mestre Morphin Magenta",
+        "short": "Magenta",
+        "color": "#e6399b",
+        "status": "canónico",
+        "voice": "pt-BR-FabioNeural",
+        "voiceName": "Fabio",
+    },
+    {
+        "id": "verde-lima",
+        "file": "mestre-verde-lima.md",
+        "name": "Mestre Morphin Verde Lima",
+        "short": "Verde Lima",
+        "color": "#a6e22e",
+        "status": "canónico",
+        "voice": "pt-BR-JulioNeural",
+        "voiceName": "Julio",
+    },
 ]
 
 MASTER_BY_ID = {m["id"]: m for m in MASTERS}

@@ -70,6 +70,9 @@ const TOM_MESTRE = {
   Brenda: { pitch: 1.18, rate: 0.9 },
   Humberto: { pitch: 0.86, rate: 0.85 },
   Leticia: { pitch: 1.14, rate: 0.86 },
+  Leila: { pitch: 1.08, rate: 0.85 },
+  Fabio: { pitch: 0.9, rate: 0.86 },
+  Julio: { pitch: 1.05, rate: 0.92 },
 };
 
 function escolherVoz(master) {
