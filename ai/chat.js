@@ -67,6 +67,9 @@ const TOM_MESTRE = {
   Valerio: { pitch: 0.88, rate: 0.84 },
   Yara: { pitch: 1.12, rate: 0.87 },
   Nicolau: { pitch: 0.9, rate: 0.83 },
+  Brenda: { pitch: 1.18, rate: 0.9 },
+  Humberto: { pitch: 0.86, rate: 0.85 },
+  Leticia: { pitch: 1.14, rate: 0.86 },
 };
 
 function escolherVoz(master) {
