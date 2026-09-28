@@ -4,6 +4,15 @@
    dinâmico por Mestre (--accent, definido pelo chat.js).
    ========================================================= */
 
+/* --accent registado como <color>: a troca de Ranger passa a poder
+   transitar (fade) em vez de saltar. Browsers sem @property mantêm o
+   comportamento antigo — troca instantânea, sem quebras. */
+@property --accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #e6b84c;
+}
+
 :root {
   --bg: #070818;
   --bg-2: #0b0d22;
@@ -22,6 +31,8 @@
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --shadow: 0 24px 70px rgba(0, 0, 0, .55);
+  /* Fundo, badge, botões e grelha acompanham o Ranger em fade suave. */
+  transition: --accent .55s ease;
 }
 
 * { box-sizing: border-box; }
@@ -64,6 +75,50 @@ body {
   0%   { transform: translate(0, 0) scale(1); }
   50%  { transform: translate(28px, -20px) scale(1.08); }
   100% { transform: translate(-18px, 16px) scale(.96); }
+}
+
+/* ── Fundo dinâmico do Mestre (Sci-Fi Grid + nebulosa) ──────────────────
+   Camada absoluta atrás de tudo (z-index -1 dentro de .fx), com linhas
+   finas na cor ativa do Ranger. Só anima transform/opacity (aceleração
+   por hardware) e a opacidade é mínima para não mexer na legibilidade. */
+.fx-mestre {
+  position: absolute; inset: -96px;   /* sobra para translação sem rebites */
+  z-index: -1;
+  opacity: .05;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--accent) 85%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--accent) 85%, transparent) 1px, transparent 1px);
+  background-size: 96px 96px;
+  will-change: transform;
+  animation: grelhaDeriva 48s linear infinite;
+}
+/* Loop perfeito: o padrão repete-se de 96 em 96px, por isso o salto do
+   fim para o início do keyframe é invisível. */
+@keyframes grelhaDeriva {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-96px, -96px, 0); }
+}
+
+/* Nebulosa na cor do Ranger ativo: o gradiente usa --accent, portanto
+   acompanha o fade do @property quando trocas de Mestre. */
+.fx-orb--mestre {
+  width: 700px; height: 560px;
+  top: -14%; left: 50%; margin-left: -350px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%);
+  animation: orbMestre 34s ease-in-out infinite alternate;
+}
+@keyframes orbMestre {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(24px, -18px, 0) scale(1.06); }
+  100% { transform: translate3d(-20px, 14px, 0) scale(.97); }
+}
+
+/* Movimento zero para quem o pede: só fica o desenho estático. */
+@media (prefers-reduced-motion: reduce) {
+  .fx-mestre,
+  .fx-orb,
+  .fx-orb--mestre { animation: none !important; will-change: auto; }
+  :root { transition: none; }
 }
 
 /* ---------- estrutura ---------- */
