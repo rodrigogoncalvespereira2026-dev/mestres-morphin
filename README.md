@@ -93,11 +93,19 @@ Ao trocar de Mestre, o painel central e o distintivo dão um rápido
 `ai/style.css`): o `selectMaster` põe a classe `.sintonizar` e retira-a
 no `animationend`, deixando a interface estável outra vez.
 
-Em ecrãs até **768px** a app vira mobile: o título dá lugar a um **header com
-☰ e o nome do Mestre**, a lista passa a **gaveta fixa de 280px** fora do ecrã
-(`transform: translateX(-100%)`, `.sidebar-open` no `<body>`, scrim e fecha ao
-clicar fora/ao escolher um Mestre), o chat ocupa o ecrã todo e as ações têm
-no mínimo **44px** de área de toque — com a Criatividade numa linha própria.
+Em ecrãs até **768px** a app vira mobile: o título dá lugar a um **header
+nativo de 56px** (fundo translúcido com `backdrop-filter`, ☰ à esquerda, nome +
+distintivo do Mestre ao centro e o **+ de nova conversa** à direita), a lista
+passa a **gaveta fixa de 280px** fora do ecrã (`transform: translateX(-100%)`,
+`.sidebar-open` no `<body>`, scrim e fecha ao clicar fora/ao escolher um
+Mestre) e o composer com as ações junta-se num **cartão flutuante arredondado**
+com a margem `env(safe-area-inset-bottom)` para não chocar com a barra do
+sistema: 📎 e 🎤 à esquerda do campo (**16px**, sem zoom automático do iOS),
+envio como **seta ↑ compacta** (só ativa com texto) e a Criatividade escondida
+atrás de uma **engrenagem**. Os balões chegam a **85%** da largura, o scroll é
+contido (`overscroll-behavior: contain`) e ao focar o campo a conversa desce
+logo para a última mensagem (o teclado do iOS é apanhado nas frações seguintes)
+— tudo com áreas de toque ≥ **44px**.
 
 ### Como correr
 

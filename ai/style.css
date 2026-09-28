@@ -1195,22 +1195,30 @@ body {
    desktop ficar exatamente como estava. */
 .mobile-header { display: none; }
 .sidebar-backdrop { display: none; }
+/* O cartão do composer só existe no mobile; em desktop o wrapper desaparece
+   (.dock com display:contents) e o layout continua a ser o de sempre. */
+.dock { display: contents; }
+/* Engrenagem da criatividade e seta do envio: só o mobile os usa. */
+.cria-btn { display: none; }
+.ic-seta { display: none; }
 
 /* ---------- telemóvel / tablet (≤768px): ecrã cheio + gaveta ---------- */
 @media (max-width: 768px) {
-  /* Header mobile: hambúrguer à esquerda, nome do Mestre ao centro. */
+  /* Header mobile nativo: 56px, translúcido, ☰ | nome + distintivo | + */
   .mobile-header {
     display: grid;
-    grid-template-columns: 44px 1fr auto;
-    align-items: center; gap: 10px;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center; gap: 8px;
+    height: 56px; min-height: 56px;
     position: sticky; top: 0; z-index: 900;
-    margin: 12px 0 0; padding: 7px 8px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: rgba(9, 11, 28, .85);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    box-shadow: var(--shadow);
+    margin: 0; padding: 0 6px;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 0;
+    background: rgba(9, 11, 28, .72);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
   }
   .menu-btn {
     width: 44px; height: 44px;
@@ -1230,21 +1238,50 @@ body {
     border-color: color-mix(in srgb, var(--accent) 55%, transparent);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
+  .mobile-centro {
+    display: flex; align-items: center; justify-content: center;
+    gap: 7px; min-width: 0;
+  }
   .mobile-name {
     min-width: 0; text-align: center;
-    font-family: var(--mono); font-size: .62rem;
-    letter-spacing: .18em; text-transform: uppercase;
+    font-family: var(--mono); font-size: .58rem;
+    letter-spacing: .16em; text-transform: uppercase;
     color: var(--accent);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .mobile-brand {
-    font-family: var(--mono); font-size: .5rem;
-    letter-spacing: .22em; text-transform: uppercase;
-    color: var(--muted); opacity: .8;
+  /* Distintivo ao lado do nome: mesma cor/estado, só que mais pequeno. */
+  .mobile-badge {
+    flex: 0 0 auto;
+    padding: 3px 7px 3px 6px;
+    font-size: .44rem; letter-spacing: .16em;
+    transform: none;
+  }
+  .mobile-badge .badge-led { width: 5px; height: 5px; flex: 0 0 5px; }
+  /* "+" de nova conversa no canto direito do header. */
+  .nova-btn {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    font-family: var(--mono); font-size: 1.4rem; line-height: 1;
+    color: var(--accent);
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .18s, border-color .18s, background .18s;
+  }
+  .nova-btn:hover,
+  .nova-btn:active {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
 
   /* O header mobile substitui o hero: o chat fica com o ecrã todo. */
   .hero { display: none; }
+  /* Barra de topo de ponta a ponta (o padding do ≤820px só serve o desktop
+     largo); o banner e o chat voltam a ter a sua própria folga. */
+  .app { padding: 0; }
+  .banner { margin: 12px; }
 
   /* Painel de chat: 100% da largura, margem 0, 12px de folga. */
   .layout { flex: 1; min-height: 0; padding: 12px; gap: 12px; }
@@ -1296,32 +1333,92 @@ body {
     opacity: 1; pointer-events: auto;
   }
 
-  /* Toque: nenhuma ação abaixo de 44px; o slider vai para linha própria. */
-  .composer { padding: 10px 12px; gap: 8px; }
+  /* Toque: nenhuma ação abaixo de 44px. */
   .composer button,
   .composer .anexo-btn {
     min-width: 44px; min-height: 44px;
     padding: 10px 14px;
     justify-content: center;
   }
-  .composer textarea { min-height: 44px; font-size: 16px; }
+  .composer textarea { min-height: 44px; font-size: 16px; padding: 10px 12px; }
   .anexo-remover { width: 44px; height: 44px; flex: 0 0 44px; }
   .anexo { margin: 10px 12px 0; max-width: calc(100% - 24px); }
   .sugestoes { padding: 10px 12px 0; }
-  .acoes {
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-    gap: 8px;
-  }
   .acao {
     min-height: 44px; padding: 10px 14px;
     -webkit-tap-highlight-color: transparent;
   }
-  .criatividade {
-    order: 3; flex: 1 0 100%;
+
+  /* ---------- cartão flutuante: composer + ações num só ---------- */
+  .dock {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    margin: 0 10px calc(8px + env(safe-area-inset-bottom));
+    padding: 8px;
+    background: rgba(14, 16, 38, .92);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: 20px;
+    box-shadow: 0 -8px 26px rgba(0, 0, 0, .42), 0 14px 34px rgba(0, 0, 0, .45);
+    flex-shrink: 0;
+  }
+  /* Os filhos do <form> e da <nav> passam a ser itens do cartão. */
+  .composer, .acoes { display: contents; }
+  /* Ordem da linha: 📎 🎤 [campo] ⬆ ⚙ */
+  .composer .anexo-btn { order: 1; align-self: center; }
+  #voz-btn { order: 2; }
+  .composer textarea { order: 3; width: 100%; }
+  #send-btn { order: 4; }
+  #cria-btn { order: 5; }
+  .criatividade { order: 6; grid-column: 1 / -1; display: none; }
+  /* Voz e engrenagem só com o ícone: numa linha não há lugar para o texto. */
+  #voz-txt { display: none; }
+  .acoes #clear-btn { display: none; }  /* o "+" do header faz este trabalho */
+  .cria-btn {
+    display: inline-flex;
+    min-width: 44px; min-height: 44px;
+    justify-content: center; padding: 10px;
+    font-size: .95rem;
+  }
+  .cria-btn[aria-expanded="true"] {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  /* Slider escondido até a engrenagem pedir. */
+  .dock.cria-aberto .criatividade {
+    display: flex;
     width: 100%; margin-left: 0;
     justify-content: space-between;
     min-height: 44px; padding: 6px 12px;
     border-radius: 14px;
   }
   .criatividade-range { flex: 1; width: auto; height: 44px; }
+
+  /* Enviar: disco compacto com a seta para cima (ativo só com texto). */
+  #send-btn {
+    width: 44px; height: 44px;
+    padding: 0; border-radius: 50%;
+    justify-content: center;
+  }
+  #send-btn span:not(.ic-seta) { display: none; }
+  #send-btn svg { display: none; }
+  #send-btn .ic-seta { display: inline-flex; font-size: 1.15rem; }
+  #send-btn:disabled { opacity: .38; }
+
+  /* Conversa: balões até 85%, 16px legíveis e scroll contido. */
+  .messages {
+    padding: 14px 12px; gap: 11px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .msg .bubble {
+    max-width: 85%;
+    padding: 12px 14px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
 }

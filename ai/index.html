@@ -34,8 +34,16 @@
     <button id="menu-btn" class="menu-btn" type="button"
             aria-label="Abrir a lista de Mestres"
             aria-controls="master-list" aria-expanded="false">☰</button>
-    <span id="mobile-name" class="mobile-name">Mestre Morphin</span>
-    <span class="mobile-brand" aria-hidden="true">IA</span>
+    <span class="mobile-centro">
+      <span id="mobile-name" class="mobile-name">Mestre Morphin</span>
+      <!-- Espelho do distintivo de status (atualizado com o do chat-header). -->
+      <span id="mobile-badge" class="badge-status mobile-badge" data-status="" hidden>
+        <span class="badge-led" aria-hidden="true"></span>
+        <span id="mobile-badge-texto" class="badge-status-texto"></span>
+      </span>
+    </span>
+    <button id="nova-btn" class="nova-btn" type="button"
+            aria-label="Nova conversa" title="Nova conversa">+</button>
   </header>
 
   <header class="hero">
@@ -109,46 +117,57 @@
         <button id="anexo-remover" class="anexo-remover" type="button"
                 aria-label="Remover anexo">✕</button>
       </div>
-      <form id="chat-form" class="composer" autocomplete="off">
-        <input id="anexo-input" type="file" hidden
-               accept="image/*,.txt,.md,text/plain,text/markdown">
-        <button id="anexo-btn" class="anexo-btn" type="button"
-                title="Anexar imagem, .txt ou .md"
-                aria-label="Anexar ficheiro">📎</button>
-        <textarea id="input" rows="1" placeholder="Fala com o Mestre…"
-          aria-label="A tua mensagem"></textarea>
-        <button id="send-btn" type="submit" disabled>
-          <span>Enviar</span>
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 11.5 20.5 3 13 20.5l-2.6-6.4L3 11.5Z" fill="currentColor"/></svg>
-        </button>
-      </form>
-      <!-- Barra de ações: mesma ordem em todos os personagens -->
-      <nav class="acoes" aria-label="Ações">
-        <button id="voz-btn" class="acao" type="button" aria-pressed="true"
-                title="O Mestre lê cada resposta em voz alta">
-          <span id="voz-ic" class="ic" aria-hidden="true">🔊</span>
-          <span id="voz-txt">Voz ligada</span>
-          <!-- Onda sonora: 5 barras que pulsam só enquanto a voz está a tocar -->
-          <span id="onda-voz" class="onda" aria-hidden="true">
-            <span class="onda-barra"></span>
-            <span class="onda-barra"></span>
-            <span class="onda-barra"></span>
-            <span class="onda-barra"></span>
-            <span class="onda-barra"></span>
-          </span>
-        </button>
-        <button id="clear-btn" class="acao" type="button">
-          <span class="ic" aria-hidden="true">✨</span>
-          Nova conversa
-        </button>
-        <!-- Criatividade (temperatura do modelo) — por Mestre, guardada no navegador -->
-        <div class="criatividade">
-          <label id="temp-rotulo" class="criatividade-rotulo" for="temp-range">Criatividade: 0.7</label>
-          <input id="temp-range" class="criatividade-range" type="range"
-                 min="0.0" max="1.5" step="0.1" value="0.7"
-                 aria-labelledby="temp-rotulo">
-        </div>
-      </nav>
+      <!-- Cartão flutuante do telemóvel: composer + ações no mesmo elemento.
+           Em desktop o .dock usa display:contents e nada muda na distribuição. -->
+      <div class="dock" id="dock">
+        <form id="chat-form" class="composer" autocomplete="off">
+          <input id="anexo-input" type="file" hidden
+                 accept="image/*,.txt,.md,text/plain,text/markdown">
+          <button id="anexo-btn" class="anexo-btn" type="button"
+                  title="Anexar imagem, .txt ou .md"
+                  aria-label="Anexar ficheiro">📎</button>
+          <textarea id="input" rows="1" placeholder="Fala com o Mestre…"
+            aria-label="A tua mensagem"></textarea>
+          <button id="send-btn" type="submit" disabled>
+            <span>Enviar</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 11.5 20.5 3 13 20.5l-2.6-6.4L3 11.5Z" fill="currentColor"/></svg>
+            <!-- Só no mobile o envio vira uma seta para cima compacta. -->
+            <span class="ic-seta" aria-hidden="true">↑</span>
+          </button>
+        </form>
+        <!-- Barra de ações: mesma ordem em todos os personagens -->
+        <nav class="acoes" aria-label="Ações">
+          <button id="voz-btn" class="acao" type="button" aria-pressed="true"
+                  title="O Mestre lê cada resposta em voz alta">
+            <span id="voz-ic" class="ic" aria-hidden="true">🔊</span>
+            <span id="voz-txt">Voz ligada</span>
+            <!-- Onda sonora: 5 barras que pulsam só enquanto a voz está a tocar -->
+            <span id="onda-voz" class="onda" aria-hidden="true">
+              <span class="onda-barra"></span>
+              <span class="onda-barra"></span>
+              <span class="onda-barra"></span>
+              <span class="onda-barra"></span>
+              <span class="onda-barra"></span>
+            </span>
+          </button>
+          <button id="clear-btn" class="acao" type="button">
+            <span class="ic" aria-hidden="true">✨</span>
+            Nova conversa
+          </button>
+          <!-- Criatividade (temperatura do modelo) — por Mestre, guardada no navegador -->
+          <div class="criatividade">
+            <label id="temp-rotulo" class="criatividade-rotulo" for="temp-range">Criatividade: 0.7</label>
+            <input id="temp-range" class="criatividade-range" type="range"
+                   min="0.0" max="1.5" step="0.1" value="0.7"
+                   aria-labelledby="temp-rotulo">
+          </div>
+          <!-- No mobile o slider fica escondido atrás desta engrenagem. -->
+          <button id="cria-btn" class="acao cria-btn" type="button"
+                  aria-expanded="false" aria-controls="temp-range"
+                  aria-label="Criatividade do modelo"
+                  title="Criatividade do modelo">⚙</button>
+        </nav>
+      </div>
     </main>
   </div>
   <!-- Scrim da gaveta mobile: fica DENTRO do .app para partilhar o mesmo

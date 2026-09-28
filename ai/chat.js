@@ -64,6 +64,14 @@ const els = {
   // Header mobile (☰) e gaveta de Mestres — só ativos em ecrãs estreitos.
   menuBtn: document.getElementById("menu-btn"),
   mobileName: document.getElementById("mobile-name"),
+  mobileBadge: document.getElementById("mobile-badge"),
+  mobileBadgeTexto: document.getElementById("mobile-badge-texto"),
+  // "+" do header (nova conversa) e engrenagem de criatividade do cartão.
+  novaBtn: document.getElementById("nova-btn"),
+  criaBtn: document.getElementById("cria-btn"),
+  clearBtn: document.getElementById("clear-btn"),
+  // Cartão flutuante do composer em mobile (ver @media 768px).
+  dock: document.getElementById("dock"),
   sidebar: document.querySelector(".sidebar"),
 };
 
@@ -333,15 +341,21 @@ function statusSlug(status) {
 }
 
 // Selo ao lado do nome: texto, cor e visibilidade acompanham o Mestre ativo.
-function atualizarBadge(m) {
-  if (!els.badge) return;
+// O mesmo estado é espelhado no header mobile (o chat-header está escondido lá).
+function aplicarBadge(el, texto, m) {
+  if (!el) return;
   if (!m || !m.status) {
-    els.badge.hidden = true;
+    el.hidden = true;
     return;
   }
-  els.badge.hidden = false;
-  els.badge.dataset.status = statusSlug(m.status);
-  if (els.badgeTexto) els.badgeTexto.textContent = m.status;
+  el.hidden = false;
+  el.dataset.status = statusSlug(m.status);
+  if (texto) texto.textContent = m.status;
+}
+
+function atualizarBadge(m) {
+  aplicarBadge(els.badge, els.badgeTexto, m);
+  aplicarBadge(els.mobileBadge, els.mobileBadgeTexto, m);
 }
 
 // ---------- sugestões rápidas ----------
@@ -466,8 +480,8 @@ function selectMaster(id) {
   renderMessages();
   renderSugestoes();
   updateSend();
-  // Sinal da Rede Morphin: painel e distintivo "sintonizam" com o Ranger.
-  sintonizar(els.painel, els.badge);
+  // Sinal da Rede Morphin: painel e distintivos "sintonizam" com o Ranger.
+  sintonizar(els.painel, els.badge, els.mobileBadge);
   els.input.focus();
 }
 
@@ -531,6 +545,45 @@ document.addEventListener("click", (e) => {
   if (els.menuBtn && els.menuBtn.contains(alvo)) return;
   fecharSidebar();
 });
+
+// ---------- header + cartão do composer (mobile) ----------
+// "+" do header e "Nova conversa" da barra de ações fazem o mesmo trabalho.
+function novaConversa() {
+  if (!state.activeId) return;
+  delete state.histories[state.activeId];
+  guardarEstado();
+  stopSpeaking();
+  cara?.estado("espera");
+  renderMessages();
+  toast("Conversa reiniciada.");
+  els.input.focus();
+}
+if (els.clearBtn) els.clearBtn.addEventListener("click", novaConversa);
+if (els.novaBtn) els.novaBtn.addEventListener("click", novaConversa);
+
+// Engrenagem: no telemóvel o slider de criatividade só aparece a pedido.
+function alternarCriatividade() {
+  if (!els.dock || !els.criaBtn) return;
+  const aberto = !els.dock.classList.contains("cria-aberto");
+  els.dock.classList.toggle("cria-aberto", aberto);
+  els.criaBtn.setAttribute("aria-expanded", String(aberto));
+}
+if (els.criaBtn) els.criaBtn.addEventListener("click", alternarCriatividade);
+
+// Teclado virtual: ao focar o campo (ou quando o teclado abre e fecha a
+// janela), a conversa desce logo para a última mensagem. No iOS o teclado
+// demora a assentar, por isso repetimos a descida nas frações seguintes.
+function rolarParaTeclado() {
+  scrollDown();
+  setTimeout(scrollDown, 120);
+  setTimeout(scrollDown, 350);
+}
+if (els.input) els.input.addEventListener("focus", rolarParaTeclado);
+if (typeof window !== "undefined" && window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    if (document.activeElement === els.input) rolarParaTeclado();
+  });
+}
 
 // ---------- anexo (imagem / texto) ----------
 // Imagem → Base64 (data URL) no payload; .txt/.md → conteúdo de texto.
@@ -1044,16 +1097,8 @@ els.input.addEventListener("keydown", (e) => {
   }
 });
 
-document.getElementById("clear-btn").addEventListener("click", () => {
-  if (!state.activeId) return;
-  delete state.histories[state.activeId];
-  guardarEstado();
-  stopSpeaking();
-  cara?.estado("espera");
-  renderMessages();
-  toast("Conversa reiniciada.");
-  els.input.focus();
-});
+// O botão "Nova conversa" (desktop) e o "+" do header estão ligados no bloco
+// "header + cartão do composer (mobile)", acima.
 
 // Cada Mestre tem a sua própria criatividade, guardada no navegador.
 if (els.temp) {
