@@ -46,6 +46,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-PT-DuarteNeural",
         "voiceName": "Duarte",
+        "suggestions": [
+            "Dá-me o teu plano de ação",
+            "Como devo dividir as equipas?",
+            "O que diz o protocolo?",
+        ],
     },
     {
         "id": "rosa",
@@ -56,6 +61,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-PT-RaquelNeural",
         "voiceName": "Raquel",
+        "suggestions": [
+            "Ajuda-me a entender o outro lado",
+            "Como acalmo esta tensão?",
+            "O que a equipa precisa de ouvir?",
+        ],
     },
     {
         "id": "azul",
@@ -66,6 +76,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-PT-MiguelNeural",
         "voiceName": "Miguel",
+        "suggestions": [
+            "Quais são as regras a respeitar?",
+            "Onde está o risco nesta ideia?",
+            "Aponta os pontos fracos do plano",
+        ],
     },
     {
         "id": "verde",
@@ -76,6 +91,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-AntonioNeural",
         "voiceName": "Antonio",
+        "suggestions": [
+            "O que é justo aqui?",
+            "Como avanço sem trair os princípios?",
+            "Onde chocam regra e consciência?",
+        ],
     },
     {
         "id": "preto",
@@ -86,6 +106,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-PT-EuclidesNeural",
         "voiceName": "Euclides",
+        "suggestions": [
+            "Diz apenas o essencial",
+            "Que erro não posso cometer?",
+            "Resume o que preciso de saber",
+        ],
     },
     {
         "id": "dourado",
@@ -96,6 +121,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-FranciscaNeural",
         "voiceName": "Francisca",
+        "suggestions": [
+            "Ensina-me a ver mais jogadas à frente",
+            "Qual é a jogada a longo prazo?",
+            "Faz-me a pergunta que me faz crescer",
+        ],
     },
     {
         "id": "ciano",
@@ -106,6 +136,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-PT-MatildeNeural",
         "voiceName": "Matilde",
+        "suggestions": [
+            "Que alternativa não considerei?",
+            "Como me adapto se o plano falhar?",
+            "Onde devo mudar de abordagem?",
+        ],
     },
     {
         "id": "laranja",
@@ -116,6 +151,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-ThalitaMultilingualNeural",
         "voiceName": "Thalita",
+        "suggestions": [
+            "Como abordo esta conversa com calor?",
+            "Dá-me palavras para unir a equipa",
+            "Como quebro o gelo entre eles?",
+        ],
     },
     {
         "id": "grafite",
@@ -126,6 +166,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-ValerioNeural",
         "voiceName": "Valerio",
+        "suggestions": [
+            "Análise lógica do problema, sem rodeios",
+            "Dá-me os factos e as conclusões",
+            "Onde falha este raciocínio?",
+        ],
     },
     {
         "id": "purpura",
@@ -136,6 +181,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-YaraNeural",
         "voiceName": "Yara",
+        "suggestions": [
+            "Que necessidade não dita existe aqui?",
+            "Lê o que está para trás das palavras",
+            "Como conduzo isto com dignidade?",
+        ],
     },
     {
         "id": "prateado",
@@ -146,6 +196,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-NicolauNeural",
         "voiceName": "Nicolau",
+        "suggestions": [
+            "Que ameaça escapa ao meu radar?",
+            "O que devo vigiar nesta situação?",
+            "Dá-me um conselho para guardar",
+        ],
     },
     {
         "id": "amarelo",
@@ -156,6 +211,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-BrendaNeural",
         "voiceName": "Brenda",
+        "suggestions": [
+            "Mostra-me o lado luminoso disto",
+            "Como contagio a equipa de confiança?",
+            "Que oportunidade estou a não ver?",
+        ],
     },
     {
         "id": "roxo",
@@ -166,6 +226,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-HumbertoNeural",
         "voiceName": "Humberto",
+        "suggestions": [
+            "O que falta para ficar excelência?",
+            "Aponta o que está abaixo do padrão",
+            "Como levo isto ao nível seguinte?",
+        ],
     },
     {
         "id": "branco",
@@ -176,6 +241,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-LeticiaNeural",
         "voiceName": "Leticia",
+        "suggestions": [
+            "Julga esta situação com imparcialidade",
+            "Que mérito há em cada lado?",
+            "Qual seria a decisão mais justa?",
+        ],
     },
     {
         "id": "aqua",
@@ -186,6 +256,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-LeilaNeural",
         "voiceName": "Leila",
+        "suggestions": [
+            "Observa comigo antes de decidir",
+            "O que reparaste que eu não reparei?",
+            "Como digo isto sem ferir?",
+        ],
     },
     {
         "id": "magenta",
@@ -196,6 +271,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-FabioNeural",
         "voiceName": "Fabio",
+        "suggestions": [
+            "Que paixão move esta causa?",
+            "Como luto por aquilo em que acredito?",
+            "O que me deve comover aqui?",
+        ],
     },
     {
         "id": "verde-lima",
@@ -206,6 +286,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-JulioNeural",
         "voiceName": "Julio",
+        "suggestions": [
+            "Ensiná-me sem me aborrecer",
+            "Que travessura desbloqueia isto?",
+            "Como relaxo sem perder o foco?",
+        ],
     },
     {
         "id": "castanho",
@@ -216,6 +301,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-DonatoNeural",
         "voiceName": "Donato",
+        "suggestions": [
+            "O que devo fazer com calma primeiro?",
+            "Onde me enraizo nesta decisão?",
+            "Que passos lentos dão certeza?",
+        ],
     },
     {
         "id": "azul-marinho",
@@ -226,6 +316,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-GiovannaNeural",
         "voiceName": "Giovanna",
+        "suggestions": [
+            "Mergulha fundo nesta questão",
+            "O que está para trás do óbvio?",
+            "Faz-me uma pergunta que me desassossegue",
+        ],
     },
     {
         "id": "vermelho-escuro",
@@ -236,6 +331,11 @@ MASTERS = [
         "status": "canónico",
         "voice": "pt-BR-ElzaNeural",
         "voiceName": "Elza",
+        "suggestions": [
+            "Dá-me o desafio mais duro",
+            "Como transformo pressão em força?",
+            "Onde não posso falhar?",
+        ],
     },
 ]
 

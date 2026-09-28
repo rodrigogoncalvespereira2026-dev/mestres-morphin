@@ -30,6 +30,8 @@ const els = {
   vozIc: document.getElementById("voz-ic"),
   // Onda sonora ao lado do botão de voz (5 barras).
   onda: document.getElementById("onda-voz"),
+  // Sugestões rápidas acima do campo de texto.
+  sugestoes: document.getElementById("sugestoes"),
   // Painel central da conversa — serve para o efeito de brilho (`.pensando`).
   painel: document.querySelector(".chat"),
   // Slider de criatividade (temperatura do modelo).
@@ -298,6 +300,33 @@ function removeTyping() {
   if (t) t.parentElement.remove();
 }
 
+// ---------- sugestões rápidas ----------
+// Três perguntas por Mestre (vêm de /api/masters em "suggestions").
+// Clicar numa pílula escreve no campo e põe o cursor pronto a enviar.
+function renderSugestoes() {
+  const box = els.sugestoes;
+  if (!box) return;
+  const m = activeMaster();
+  const lista = m && Array.isArray(m.suggestions) ? m.suggestions.slice(0, 3) : [];
+  box.textContent = "";
+  for (const texto of lista) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "sugestao";
+    b.textContent = texto;
+    b.title = texto;
+    b.addEventListener("click", () => {
+      els.input.value = texto;
+      resizeInput();
+      updateSend();
+      els.input.focus();
+      const fim = els.input.value.length;
+      els.input.setSelectionRange(fim, fim);
+    });
+    box.appendChild(b);
+  }
+}
+
 // ---------- master switching ----------
 function activeMaster() {
   return state.masters.find((m) => m.id === state.activeId) || null;
@@ -349,6 +378,7 @@ function selectMaster(id) {
     b.classList.toggle("active", b.dataset.id === id);
   }
   renderMessages();
+  renderSugestoes();
   updateSend();
   els.input.focus();
 }
