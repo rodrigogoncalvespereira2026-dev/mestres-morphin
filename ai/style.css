@@ -551,6 +551,59 @@ body {
 }
 .acao[aria-pressed="false"] .ic { opacity: .55; }
 
+/* ---------- onda sonora do botão de voz ---------- */
+/* Repouso: 5 barras de 3x4px em opacidade baixa. Enquanto a voz toca, a
+   classe .wave-active (colocada pelo chat.js) liga o pulso vertical de cada
+   barra com atrasos e durações ligeiramente diferentes — como frequências
+   reais a mover-se. A cor é sempre a do Mestre (--accent). */
+.onda {
+  display: inline-flex; align-items: flex-end; gap: 3px;
+  height: 16px;                 /* altura máxima que a onda pode ocupar */
+  margin-left: 3px;
+  transition: opacity .3s ease;
+}
+.onda-barra {
+  width: 3px; height: 4px;
+  border-radius: 99px;
+  background: var(--accent);
+  opacity: .4;
+  transform-origin: center bottom;
+  /* Transição suave de volta ao repouso quando a voz termina. */
+  transition: transform .45s cubic-bezier(.22, .61, .36, 1), opacity .3s ease;
+}
+.onda.wave-active .onda-barra {
+  opacity: 1;
+  animation: ondaPulsa .9s ease-in-out infinite;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+/* Desalinhamento por barra: atraso e duração próprios = som orgânico. */
+.onda.wave-active .onda-barra:nth-child(1) { animation-delay: 0s; }
+.onda.wave-active .onda-barra:nth-child(2) { animation-delay: .15s; animation-duration: .78s; }
+.onda.wave-active .onda-barra:nth-child(3) { animation-delay: .3s; animation-duration: .95s; }
+.onda.wave-active .onda-barra:nth-child(4) { animation-delay: .45s; animation-duration: .82s; }
+.onda.wave-active .onda-barra:nth-child(5) { animation-delay: .6s; animation-duration: .88s; }
+
+@keyframes ondaPulsa {
+  0%, 100% { transform: scaleY(1); }
+  35%      { transform: scaleY(3.4); }
+  70%      { transform: scaleY(2); }
+}
+
+/* Voz desligada: a onda fica muda, sem competir com o rótulo. */
+.acao[aria-pressed="false"] .onda { opacity: .45; }
+
+@media (prefers-reduced-motion: reduce) {
+  .onda-barra { transition: none; }
+  /* Sem movimento: as barras mostram uma "foto" da onda a meio. */
+  .onda.wave-active .onda-barra {
+    animation: none; box-shadow: none; opacity: 1; height: 10px;
+  }
+  .onda.wave-active .onda-barra:nth-child(2) { height: 6px; }
+  .onda.wave-active .onda-barra:nth-child(3) { height: 14px; }
+  .onda.wave-active .onda-barra:nth-child(4) { height: 8px; }
+  .onda.wave-active .onda-barra:nth-child(5) { height: 12px; }
+}
+
 /* O atributo `hidden` tem de ganhar às classes (autor sobrepõe-se ao browser). */
 [hidden] { display: none !important; }
 

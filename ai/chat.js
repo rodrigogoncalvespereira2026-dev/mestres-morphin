@@ -8,7 +8,9 @@ const state = {
   lore: {}, // masterId -> biografia devolvida pelo servidor
   busy: false,
   configured: false,
+  // true enquanto a síntese de voz toca (ou o microfone, quando existir).
   speaking: false,
+  listening: false,
   autoSpeak: true,
 };
 
@@ -26,6 +28,8 @@ const els = {
   vozBtn: document.getElementById("voz-btn"),
   vozTxt: document.getElementById("voz-txt"),
   vozIc: document.getElementById("voz-ic"),
+  // Onda sonora ao lado do botão de voz (5 barras).
+  onda: document.getElementById("onda-voz"),
   // Painel central da conversa — serve para o efeito de brilho (`.pensando`).
   painel: document.querySelector(".chat"),
   // Slider de criatividade (temperatura do modelo).
@@ -67,6 +71,13 @@ const synth = window.speechSynthesis;
 // resposta fica em espera e sai no primeiro toque/tecla.
 let vozBloqueada = true;
 let vozPendente = null;
+
+// Onda sonora do botão: pulsa enquanto a IA fala ou o microfone ouve.
+// Sempre que o estado muda, as barras voltam suavemente ao repouso (4px).
+function atualizarOnda() {
+  if (!els.onda) return;
+  els.onda.classList.toggle("wave-active", Boolean(state.speaking || state.listening));
+}
 
 // Tom de cada Mestre: mantém as vozes distinguíveis mesmo quando o browser
 // não tem a voz pedida instalada (aí cai na voz pt por omissão).
@@ -126,15 +137,27 @@ function speak(text, masterId, forcar = false) {
   utter.volume = 1.0;
   const match = escolherVoz(master);
   if (match) utter.voice = match;
-  utter.onstart = () => cara?.estado("falar");
-  utter.onend = () => cara?.estado("espera");
-  utter.onerror = () => cara?.estado("espera");
+  utter.onstart = () => {
+    state.speaking = true;
+    atualizarOnda();
+    cara?.estado("falar");
+  };
+  const parar = () => {
+    state.speaking = false;
+    atualizarOnda();
+    cara?.estado("espera");
+  };
+  utter.onend = parar;
+  utter.onerror = parar;
   synth.speak(utter);
 }
 
 function stopSpeaking() {
   if (synth) synth.cancel();
   vozPendente = null;
+  state.speaking = false;
+  state.listening = false;
+  atualizarOnda();
   cara?.estado("espera");
 }
 
