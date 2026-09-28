@@ -5,6 +5,7 @@ const state = {
   activeId: null,
   histories: {}, // masterId -> [{role, content}]
   temperaturas: {}, // masterId -> criatividade (0.0 - 1.5)
+  lore: {}, // masterId -> biografia devolvida pelo servidor
   busy: false,
   configured: false,
   speaking: false,
@@ -30,6 +31,14 @@ const els = {
   // Slider de criatividade (temperatura do modelo).
   temp: document.getElementById("temp-range"),
   tempRotulo: document.getElementById("temp-rotulo"),
+  // Painel lateral de biografia / lore.
+  lore: document.getElementById("lore-panel"),
+  loreNome: document.getElementById("lore-nome"),
+  loreStatus: document.getElementById("lore-status"),
+  loreLoading: document.getElementById("lore-loading"),
+  loreErro: document.getElementById("lore-erro"),
+  loreTexto: document.getElementById("lore-texto"),
+  loreFechar: document.getElementById("lore-fechar"),
 };
 
 // ---------- helpers ----------
@@ -311,6 +320,8 @@ function selectMaster(id) {
   els.name.textContent = m.name;
   atualizarEstado();
   atualizarSliderTemp();
+  // Painel de biografia aberto? Passa a mostrar o novo Mestre.
+  if (els.lore && els.lore.classList.contains("aberto")) abrirLore();
   for (const b of els.list.querySelectorAll(".master")) {
     b.classList.toggle("active", b.dataset.id === id);
   }
@@ -517,6 +528,180 @@ function atualizarSliderTemp() {
   els.temp.style.setProperty("--fill", pct.toFixed(1) + "%");
   if (els.tempRotulo) els.tempRotulo.textContent = "Criatividade: " + t.toFixed(1);
 }
+
+// ---------- biografia / lore ----------
+// Texto em negrito/itálico/etc. O conteúdo é escapado primeiro: nunca se
+// injecta HTML bruto vindo do ficheiro do Mestre.
+function inlineMd(texto) {
+  let s = esc(texto);
+  s = s.replace(/!\[([^\]]*)\]\((?:[^()]|\([^()]*\))*\)/g, "$1");
+  s = s.replace(/\[([^\]]+)\]\((?:[^()]|\([^()]*\))*\)/g, "$1");
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+  s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  s = s.replace(/(^|[^_])_([^_\n]+)_/g, "$1<em>$2</em>");
+  s = s.replace(/~~([^~]+)~~/g, "<s>$1</s>");
+  return s;
+}
+
+// Markdown -> fragmento do DOM (títulos, listas, parágrafos, réguas, código).
+function renderMarkdown(md) {
+  const frag = document.createDocumentFragment();
+  let paragrafo = [];
+  let lista = null;
+  let emCodigo = false;
+  let codigo = [];
+
+  const fecharPar = () => {
+    if (!paragrafo.length) return;
+    const p = document.createElement("p");
+    p.innerHTML = inlineMd(paragrafo.join(" "));
+    frag.appendChild(p);
+    paragrafo = [];
+  };
+  const fecharLista = () => {
+    if (!lista) return;
+    frag.appendChild(lista);
+    lista = null;
+  };
+  const fecharCodigo = () => {
+    if (!codigo.length) return;
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = codigo.join("\n");
+    pre.appendChild(code);
+    frag.appendChild(pre);
+    codigo = [];
+  };
+
+  const linhas = String(md || "").replace(/\r\n/g, "\n").split("\n");
+  for (const linha of linhas) {
+    if (/^\s*```/.test(linha)) {
+      if (emCodigo) fecharCodigo();
+      else { fecharPar(); fecharLista(); }
+      emCodigo = !emCodigo;
+      continue;
+    }
+    if (emCodigo) {
+      codigo.push(linha);
+      continue;
+    }
+    if (!linha.trim()) {
+      fecharPar();
+      fecharLista();
+      continue;
+    }
+    if (/^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/.test(linha)) {
+      fecharPar();
+      fecharLista();
+      frag.appendChild(document.createElement("hr"));
+      continue;
+    }
+    const cabecalho = linha.match(/^\s{0,3}(#{1,6})\s+(.*)$/);
+    if (cabecalho) {
+      fecharPar();
+      fecharLista();
+      const h = document.createElement(cabecalho[1].length <= 2 ? "h2" : "h3");
+      h.textContent = cabecalho[2].trim();
+      frag.appendChild(h);
+      continue;
+    }
+    const item = linha.match(/^\s*(?:[-*+]|\d+\.)\s+(.*)$/);
+    if (item) {
+      fecharPar();
+      if (!lista) lista = document.createElement("ul");
+      const li = document.createElement("li");
+      li.innerHTML = inlineMd(item[1]);
+      lista.appendChild(li);
+      continue;
+    }
+    fecharLista();
+    paragrafo.push(linha.replace(/^\s*>\s?/, ""));
+  }
+  if (emCodigo) fecharCodigo();
+  fecharPar();
+  fecharLista();
+  return frag;
+}
+
+async function carregarLore(id) {
+  if (state.lore[id]) return state.lore[id];
+  const resp = await fetch("/api/masters/" + encodeURIComponent(id) + "/lore");
+  if (!resp.ok) throw new Error("Erro " + resp.status);
+  const dados = await resp.json();
+  state.lore[id] = dados;
+  return dados;
+}
+
+function mostrarLore(dados) {
+  els.loreLoading.hidden = true;
+  els.loreErro.hidden = true;
+  els.loreTexto.hidden = false;
+  els.loreTexto.textContent = "";
+  els.loreTexto.appendChild(renderMarkdown(dados.markdown || dados.texto || ""));
+  if (els.loreStatus) {
+    els.loreStatus.textContent = [dados.status, dados.file].filter(Boolean).join(" · ");
+  }
+}
+
+// Cada clique pode trocar de Mestre a caminho: só o último pedido manda.
+let lorePedido = 0;
+
+async function abrirLore() {
+  const m = activeMaster();
+  if (!m || !els.lore) return;
+  const pedido = ++lorePedido;
+
+  els.loreNome.textContent = m.name;
+  els.lore.classList.add("aberto");
+  els.lore.setAttribute("aria-hidden", "false");
+  els.name.setAttribute("aria-expanded", "true");
+  els.loreErro.hidden = true;
+
+  if (state.lore[m.id]) {
+    mostrarLore(state.lore[m.id]);
+    return;
+  }
+  els.loreTexto.hidden = true;
+  els.loreLoading.hidden = false;
+  try {
+    const dados = await carregarLore(m.id);
+    if (pedido !== lorePedido) return;
+    mostrarLore(dados);
+  } catch (_) {
+    if (pedido !== lorePedido) return;
+    els.loreLoading.hidden = true;
+    els.loreErro.hidden = false;
+    els.loreErro.textContent = "Não consegui abrir o arquivo da biografia.";
+  }
+}
+
+function fecharLore() {
+  if (!els.lore) return;
+  els.lore.classList.remove("aberto");
+  els.lore.setAttribute("aria-hidden", "true");
+  els.name.setAttribute("aria-expanded", "false");
+}
+
+// Clicar no nome do Mestre ativo abre/fecha a biografia.
+els.name.addEventListener("click", () => {
+  if (els.lore.classList.contains("aberto")) fecharLore();
+  else abrirLore();
+});
+els.name.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+    e.preventDefault();
+    els.name.click();
+  }
+});
+els.loreFechar.addEventListener("click", () => {
+  fecharLore();
+  els.name.focus();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && els.lore.classList.contains("aberto")) fecharLore();
+});
 
 // ---------- boot ----------
 async function boot() {

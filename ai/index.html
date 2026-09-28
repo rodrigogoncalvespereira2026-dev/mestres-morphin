@@ -63,7 +63,10 @@
         <div class="chat-head-info">
           <div class="chat-head-title">
             <span id="chat-dot" class="dot"></span>
-            <h2 id="chat-name">Mestre Morphin</h2>
+            <!-- Nome do Mestre ativo: clique abre a biografia lateral. -->
+            <h2 id="chat-name" class="nome-ativo" role="button" tabindex="0"
+                aria-controls="lore-panel" aria-expanded="false"
+                title="Ver a biografia do Mestre">Mestre Morphin</h2>
           </div>
           <p id="chat-meta" class="meta">Aguarda a tua pergunta.</p>
         </div>
@@ -114,6 +117,23 @@
   </div>
   <div id="reacoes-grelha" class="reacoes-grelha"></div>
 </section>
+
+<!-- Painel lateral de biografia / lore do Mestre ativo -->
+<aside id="lore-panel" class="lore" aria-label="Biografia do Mestre" aria-hidden="true">
+  <div class="lore-topo">
+    <div class="lore-cabecalho">
+      <p class="lore-kicker"><span class="lore-led" aria-hidden="true"></span> Biografia</p>
+      <h3 id="lore-nome">—</h3>
+      <p id="lore-status" class="lore-status"></p>
+    </div>
+    <button id="lore-fechar" class="lore-fechar" type="button" aria-label="Fechar biografia">✕</button>
+  </div>
+  <div class="lore-corpo">
+    <p id="lore-loading" class="lore-loading" hidden>A abrir o arquivo…</p>
+    <p id="lore-erro" class="lore-erro" hidden></p>
+    <div id="lore-texto" class="lore-texto" hidden></div>
+  </div>
+</aside>
 
 <div id="toast" class="toast hidden" role="status"></div>
 

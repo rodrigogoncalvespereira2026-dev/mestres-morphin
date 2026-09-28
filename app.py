@@ -3,6 +3,7 @@
 
 Serve o frontend em ./ai e expõe:
     GET  /api/masters          -> lista de Mestres + estado da configuração
+    GET  /api/masters/<id>/lore -> biografia do Mestre (markdown + texto limpo)
     POST /api/chat             -> {masterId, messages, temperature} -> {reply}
 
 Configuração (nunca comitada): ficheiro .env.local na raiz, ou variáveis
@@ -19,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -317,6 +319,62 @@ def read_prompt(master_id: str) -> str:
     return prompt
 
 
+_IMAGEM_MD = re.compile(r"!\[([^\]]*)\]\((?:[^()]|\([^()]*\))*\)")
+_LINK_MD = re.compile(r"\[([^\]]+)\]\((?:[^()]|\([^()]*\))*\)")
+_CABECALHO_MD = re.compile(r"^\s{0,3}#{1,6}\s*")
+_REGUA_MD = re.compile(r"^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$")
+_LISTA_MD = re.compile(r"^\s*(?:[-*+]|\d+\.)\s+")
+_CITACAO_MD = re.compile(r"^\s{0,3}>\s?")
+_MARCADOR_MD = re.compile(r"\*\*|__|`{1,2}|~~|\*|_")
+
+
+def markdown_para_texto(md: str) -> str:
+    """Markdown -> texto limpo para o painel de biografia.
+
+    Sai texto puro (sem sintaxe markdown e sem HTML), pronto a injectar no
+    navegador sem risco de XSS: o painel nunca recebe código do ficheiro.
+    """
+    linhas: list[str] = []
+    em_bloco = False
+    for linha in md.replace("\r\n", "\n").split("\n"):
+        if linha.lstrip().startswith("```"):
+            em_bloco = not em_bloco
+            continue
+        if em_bloco:
+            linhas.append(linha)  # código: mantém-se literal
+            continue
+        linha = _IMAGEM_MD.sub(r"\1", linha)
+        linha = _LINK_MD.sub(r"\1", linha)
+        if _REGUA_MD.match(linha):
+            linha = ""
+        else:
+            linha = _CABECALHO_MD.sub("", linha)
+            if _LISTA_MD.match(linha):
+                linha = _LISTA_MD.sub("• ", linha)
+            linha = _CITACAO_MD.sub("", linha)
+        linha = _MARCADOR_MD.sub("", linha)
+        linhas.append(linha.rstrip())
+    texto = "\n".join(linhas)
+    texto = re.sub(r"\n{3,}", "\n\n", texto)
+    return texto.strip()
+
+
+def ler_lore(master_id: str) -> dict:
+    """Biografia/Lore do Mestre: markdown original + versão em texto limpo."""
+    master = MASTER_BY_ID[master_id]
+    markdown = (ROOT / master["file"]).read_text(encoding="utf-8")
+    return {
+        "id": master["id"],
+        "name": master["name"],
+        "short": master.get("short") or master["name"],
+        "color": master["color"],
+        "status": master["status"],
+        "file": master["file"],
+        "markdown": markdown,
+        "texto": markdown_para_texto(markdown),
+    }
+
+
 def call_llm(system_prompt: str, history: list[dict], temperature: float = TEMP_PADRAO) -> str:
     if not API_KEY:
         raise ConfigError("missing_key", "OPENAI_API_KEY não está definida. Cria o ficheiro .env.local na raiz do projeto (ver README) e reinicia o servidor.")
@@ -416,6 +474,19 @@ class Handler(BaseHTTPRequestHandler):
                     "config": self._config_info(),
                 },
             )
+            return
+        # biografia de um Mestre: /api/masters/<id>/lore
+        lore = re.match(r"^/api/masters/([^/]+)/lore$", path)
+        if lore:
+            master_id = lore.group(1)
+            if master_id not in MASTER_BY_ID:
+                self._json(404, {"error": f"Mestre desconhecido: {master_id!r}"})
+                return
+            try:
+                self._json(200, ler_lore(master_id))
+            except OSError as exc:
+                self._json(500, {"error": f"Não consegui ler a biografia: {exc}"})
+                return
             return
         # static frontend
         if path in ("/", "/index.html"):

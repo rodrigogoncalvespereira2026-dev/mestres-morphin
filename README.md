@@ -76,6 +76,11 @@ No fundo da janela há um slider **Criatividade** (temperatura do modelo:
 navegador, vai no `POST /api/chat` em `"temperature"` e o servidor limita-o
 sempre aos limites antes de o mandar ao modelo.
 
+Clicar no **nome do Mestre** (cabeçalho do chat) abre o painel lateral de
+**biografia**: o servidor devolve o markdown do ficheiro e uma versão em
+texto limpo em `GET /api/masters/<id>/lore`, e o painel desliza da direita
+com fundo translúcido e brilho na cor do Mestre. `Esc` ou o `✕` fecham.
+
 ### Como correr
 
 1. Copia `.env.example` para `.env.local` e preenche `OPENAI_API_KEY`.
