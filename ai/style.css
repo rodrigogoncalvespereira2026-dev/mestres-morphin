@@ -690,6 +690,7 @@ body {
 
 .composer textarea {
   flex: 1; resize: none;
+  min-width: 0;                 /* sem isto o campo não encolhe e a grelha mobile transborda */
   background: rgba(8, 10, 24, .55);
   color: var(--ink);
   border: 1px solid var(--line);
@@ -1198,8 +1199,8 @@ body {
 /* O cartão do composer só existe no mobile; em desktop o wrapper desaparece
    (.dock com display:contents) e o layout continua a ser o de sempre. */
 .dock { display: contents; }
-/* Engrenagem da criatividade e seta do envio: só o mobile os usa. */
-.cria-btn { display: none; }
+/* "+" do composer e seta do envio: só o mobile os usa. */
+.extras-btn { display: none; }
 .ic-seta { display: none; }
 
 /* ---------- telemóvel / tablet (≤768px): ecrã cheio + gaveta ---------- */
@@ -1305,11 +1306,15 @@ body {
   body.sidebar-open .sidebar { transform: translateX(0); }
   .side-head { margin: 0 0 10px; }
   .side-count { display: block; }
-  /* Lista volta a ser vertical (no ≤820px ficara numa tira horizontal). */
+  /* Lista numa única coluna vertical: com `wrap` e a altura fixa da gaveta,
+     os 20 Mestres partiam em 2 colunas e a segunda ficava cortada pelo
+     overflow:hidden da sidebar — daí só aparecerem 13. */
   .master-list {
-    flex-direction: column; flex-wrap: wrap;
+    flex: 1 1 auto; min-height: 0;
+    flex-direction: column; flex-wrap: nowrap;
     gap: 7px;
     overflow-x: hidden; overflow-y: auto;
+    overscroll-behavior: contain;
     padding-right: 4px; padding-bottom: 4px;
   }
   .master {
@@ -1352,9 +1357,10 @@ body {
   /* ---------- cartão flutuante: composer + ações num só ---------- */
   .dock {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
+    min-width: 0;
     margin: 0 10px calc(8px + env(safe-area-inset-bottom));
     padding: 8px;
     background: rgba(14, 16, 38, .92);
@@ -1367,36 +1373,60 @@ body {
   }
   /* Os filhos do <form> e da <nav> passam a ser itens do cartão. */
   .composer, .acoes { display: contents; }
-  /* Ordem da linha: 📎 🎤 [campo] ⬆ ⚙ */
-  .composer .anexo-btn { order: 1; align-self: center; }
-  #voz-btn { order: 2; }
-  .composer textarea { order: 3; width: 100%; }
-  #send-btn { order: 4; }
-  #cria-btn { order: 5; }
-  .criatividade { order: 6; grid-column: 1 / -1; display: none; }
-  /* Voz e engrenagem só com o ícone: numa linha não há lugar para o texto. */
-  #voz-txt { display: none; }
-  .acoes #clear-btn { display: none; }  /* o "+" do header faz este trabalho */
-  .cria-btn {
-    display: inline-flex;
-    min-width: 44px; min-height: 44px;
-    justify-content: center; padding: 10px;
-    font-size: .95rem;
+
+  /* Linha 1: [+] [campo] [⬆] — clip, voz e criatividade escondidos no "+". */
+  #extras-btn { grid-area: 1 / 1; }
+  .composer textarea { grid-area: 1 / 2; width: 100%; min-width: 0; }
+  #send-btn { grid-area: 1 / 3; }
+
+  .composer .anexo-btn,
+  #voz-btn,
+  .criatividade { display: none; }
+  /* Com o "+" aberto: linha 2 = clip + voz, linha 3 = criatividade. */
+  .dock.extras-aberto .composer .anexo-btn {
+    display: inline-flex; grid-area: 2 / 1; align-self: center;
   }
-  .cria-btn[aria-expanded="true"] {
-    color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  .dock.extras-aberto #voz-btn {
+    display: inline-flex; grid-area: 2 / 2; justify-self: start;
   }
-  /* Slider escondido até a engrenagem pedir. */
-  .dock.cria-aberto .criatividade {
-    display: flex;
+  .dock.extras-aberto .criatividade {
+    display: flex; grid-area: 3 / 1 / 4 / -1;
     width: 100%; margin-left: 0;
     justify-content: space-between;
     min-height: 44px; padding: 6px 12px;
     border-radius: 14px;
   }
-  .criatividade-range { flex: 1; width: auto; height: 44px; }
+  /* 44px de área de toque, mas a pista pintada fica com 6px no meio:
+     sem isto o gradiente do fundo inteiro do input vira uma barra de 44px. */
+  .criatividade-range {
+    flex: 1; width: auto; height: 44px;
+    background:
+      linear-gradient(
+        to right,
+        var(--accent) var(--fill, 47%),
+        rgba(255, 255, 255, .14) var(--fill, 47%)
+      )
+      center / 100% 6px no-repeat;
+  }
+  .criatividade-range::-moz-range-track { background: transparent; }
+
+  /* Voz só com o ícone: não há lugar para o texto numa linha. */
+  #voz-txt { display: none; }
+  .acoes #clear-btn { display: none; }  /* o "+" do header faz este trabalho */
+  /* "+" do composer: vira ✕ quando a área extra está aberta. */
+  .extras-btn {
+    display: inline-flex;
+    min-width: 44px; min-height: 44px;
+    justify-content: center; padding: 0;
+    font-size: 1.5rem;
+    transition: transform .2s ease, color .18s, border-color .18s, background .18s;
+  }
+  .extras-btn[aria-expanded="true"] {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    transform: rotate(45deg);
+  }
 
   /* Enviar: disco compacto com a seta para cima (ativo só com texto). */
   #send-btn {

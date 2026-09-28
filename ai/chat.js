@@ -66,9 +66,9 @@ const els = {
   mobileName: document.getElementById("mobile-name"),
   mobileBadge: document.getElementById("mobile-badge"),
   mobileBadgeTexto: document.getElementById("mobile-badge-texto"),
-  // "+" do header (nova conversa) e engrenagem de criatividade do cartão.
+  // "+" do header (nova conversa) e "+" do cartão (clip/voz/criatividade).
   novaBtn: document.getElementById("nova-btn"),
-  criaBtn: document.getElementById("cria-btn"),
+  extrasBtn: document.getElementById("extras-btn"),
   clearBtn: document.getElementById("clear-btn"),
   // Cartão flutuante do composer em mobile (ver @media 768px).
   dock: document.getElementById("dock"),
@@ -561,14 +561,14 @@ function novaConversa() {
 if (els.clearBtn) els.clearBtn.addEventListener("click", novaConversa);
 if (els.novaBtn) els.novaBtn.addEventListener("click", novaConversa);
 
-// Engrenagem: no telemóvel o slider de criatividade só aparece a pedido.
-function alternarCriatividade() {
-  if (!els.dock || !els.criaBtn) return;
-  const aberto = !els.dock.classList.contains("cria-aberto");
-  els.dock.classList.toggle("cria-aberto", aberto);
-  els.criaBtn.setAttribute("aria-expanded", String(aberto));
+// "+" do composer: no telemóvel abre a área com o clip, a voz e a criatividade.
+function alternarExtras() {
+  if (!els.dock || !els.extrasBtn) return;
+  const aberto = !els.dock.classList.contains("extras-aberto");
+  els.dock.classList.toggle("extras-aberto", aberto);
+  els.extrasBtn.setAttribute("aria-expanded", String(aberto));
 }
-if (els.criaBtn) els.criaBtn.addEventListener("click", alternarCriatividade);
+if (els.extrasBtn) els.extrasBtn.addEventListener("click", alternarExtras);
 
 // Teclado virtual: ao focar o campo (ou quando o teclado abre e fecha a
 // janela), a conversa desce logo para a última mensagem. No iOS o teclado
