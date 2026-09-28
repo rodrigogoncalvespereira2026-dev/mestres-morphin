@@ -365,6 +365,43 @@ function renderSugestoes() {
   }
 }
 
+// ---------- sintonia da Rede Morphin (glitch na troca de Mestre) ----------
+// 240 ms de interferência no painel central e no distintivo: a classe entra
+// (com reflow, para reiniciar em trocas rápidas) e sai no animationend.
+// O timeout é só rede de segurança caso a animação nem chegue a correr.
+const CLASSE_SINTONIA = "sintonizar";
+const SINTONIA_MS = 400;
+const sintoniaLigada = new WeakSet();
+const sintoniaTimers = new Map();
+
+function sintonizar(...alvos) {
+  const vivos = alvos.filter(
+    (el) => el && el.classList && typeof el.classList.add === "function"
+  );
+  if (!vivos.length) return;
+  for (const el of vivos) {
+    clearTimeout(sintoniaTimers.get(el));
+    el.classList.remove(CLASSE_SINTONIA);
+    void el.offsetWidth; // força reflow: a animação recomeça sempre
+    el.classList.add(CLASSE_SINTONIA);
+    if (!sintoniaLigada.has(el)) {
+      sintoniaLigada.add(el);
+      el.addEventListener("animationend", (e) => {
+        if (e.target !== el) return; // animações das crianças não contam
+        if (e.animationName && e.animationName !== "sintonizar") return;
+        el.classList.remove(CLASSE_SINTONIA);
+      });
+    }
+    sintoniaTimers.set(
+      el,
+      setTimeout(() => {
+        el.classList.remove(CLASSE_SINTONIA);
+        sintoniaTimers.delete(el);
+      }, SINTONIA_MS)
+    );
+  }
+}
+
 // ---------- master switching ----------
 function activeMaster() {
   return state.masters.find((m) => m.id === state.activeId) || null;
@@ -419,6 +456,8 @@ function selectMaster(id) {
   renderMessages();
   renderSugestoes();
   updateSend();
+  // Sinal da Rede Morphin: painel e distintivo "sintonizam" com o Ranger.
+  sintonizar(els.painel, els.badge);
   els.input.focus();
 }
 

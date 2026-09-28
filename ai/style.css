@@ -354,6 +354,83 @@ body {
   .chat.pensando { animation: none; }
 }
 
+/* ---------- sintonia da Rede Morphin (glitch na troca de Mestre) ---------- */
+/* 240 ms de interferência: cintilação holográfica, deslocamento dos canais
+   vermelho/ciano e scanlines temporárias. Tudo em steps() para dar o aspecto
+   digital — e só em transform/opacity/filter, para nunca mexer na leitura.
+   A classe é removida no animationend (chat.js) e o painel fica como estava. */
+.chat.sintonizar,
+.badge-status.sintonizar {
+  animation: sintonizar 240ms steps(1, end) 1;
+}
+@keyframes sintonizar {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+    filter: none;
+  }
+  15% {
+    transform: translateX(-4px);
+    opacity: .5;
+    filter:
+      drop-shadow(3px 0 rgba(255, 40, 92, .9))
+      drop-shadow(-3px 0 rgba(0, 229, 255, .9));
+  }
+  30% {
+    transform: translateX(3px);
+    opacity: .92;
+    filter:
+      drop-shadow(-4px 0 rgba(255, 40, 92, .7))
+      drop-shadow(4px 0 rgba(0, 229, 255, .7));
+  }
+  45% {
+    transform: translateX(-2px);
+    opacity: .6;
+    filter:
+      drop-shadow(2px 0 rgba(255, 40, 92, .8))
+      drop-shadow(-2px 0 rgba(0, 229, 255, .8));
+  }
+  60% {
+    transform: translateX(2px);
+    opacity: 1;
+    filter: none;
+  }
+  75% {
+    transform: translateX(-1px);
+    opacity: .78;
+    filter:
+      drop-shadow(2px 0 rgba(0, 229, 255, .6))
+      drop-shadow(-2px 0 rgba(255, 40, 92, .6));
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+    filter: none;
+  }
+}
+/* Scanlines a deslizar por cima do painel, só enquanto a classe está posta.
+   `position` entra só com a classe (o pseudo sai do fluxo do flex). */
+.chat.sintonizar { position: relative; }
+.chat.sintonizar::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, .17) 0 1px,
+    rgba(255, 255, 255, 0) 1px 3px
+  );
+  mix-blend-mode: overlay;
+  animation: scanlineSintonia 240ms steps(1, end) 1;
+}
+@keyframes scanlineSintonia {
+  0%   { opacity: 0;   transform: translateY(-6px); }
+  15%  { opacity: .9;  transform: translateY(0); }
+  45%  { opacity: .55; transform: translateY(4px); }
+  75%  { opacity: .3;  transform: translateY(7px); }
+  100% { opacity: 0;   transform: translateY(10px); }
+}
+
 .chat-header {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 18px;

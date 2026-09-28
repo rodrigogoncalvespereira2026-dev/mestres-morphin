@@ -88,6 +88,11 @@ repete o pedido só com texto e avisa) e **.txt/.md** (entram como bloco
 `[ANEXO: …]` na última mensagem). Um chip com miniatura, nome e `✕` aparece
 acima da barra até enviar ou remover — nunca fica guardado no navegador.
 
+Ao trocar de Mestre, o painel central e o distintivo dão um rápido
+**glitch de sintonia** (240 ms de cintilação holográfica e scanlines, em
+`ai/style.css`): o `selectMaster` põe a classe `.sintonizar` e retira-a
+no `animationend`, deixando a interface estável outra vez.
+
 ### Como correr
 
 1. Copia `.env.example` para `.env.local` e preenche `OPENAI_API_KEY`.
