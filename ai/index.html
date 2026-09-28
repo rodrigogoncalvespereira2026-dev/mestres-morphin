@@ -28,9 +28,6 @@
   <div class="fx-orb fx-orb--mestre"></div>
 </div>
 
-<!-- Scrim da gaveta mobile: clicar fora fecha a lista de Mestres -->
-<div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
-
 <div class="app">
   <!-- Header mobile: só aparece em ecrãs estreitos (ver @media 768px) -->
   <header id="mobile-header" class="mobile-header">
@@ -154,6 +151,10 @@
       </nav>
     </main>
   </div>
+  <!-- Scrim da gaveta mobile: fica DENTRO do .app para partilhar o mesmo
+       stacking context que a sidebar (que também está dentro do .app) —
+       fora daqui, o scrim (z-index 999) taparia a gaveta e os toques. -->
+  <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
 </div>
 
 <!-- Painel de reações: escolher a expressão do Mestre à mão -->

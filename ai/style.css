@@ -1283,15 +1283,14 @@ body {
   .master:hover { transform: none; }
   .master .badge { display: inline-flex; }
 
-  /* Scrim: escurece o fundo enquanto a gaveta está aberta. */
+  /* Scrim: escurece o fundo enquanto a gaveta está aberta (sem blur —
+     o fundo escurece, mas a lista por cima fica nítida). */
   .sidebar-backdrop {
     display: block;
     position: fixed; inset: 0; z-index: 999;
     background: rgba(4, 6, 18, .62);
     opacity: 0; pointer-events: none;
     transition: opacity .3s ease;
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
   }
   body.sidebar-open .sidebar-backdrop {
     opacity: 1; pointer-events: auto;
