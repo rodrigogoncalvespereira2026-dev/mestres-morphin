@@ -32,6 +32,9 @@ const els = {
   onda: document.getElementById("onda-voz"),
   // Sugestões rápidas acima do campo de texto.
   sugestoes: document.getElementById("sugestoes"),
+  // Distintivo de status ao lado do nome do Mestre ativo.
+  badge: document.getElementById("badge-status"),
+  badgeTexto: document.getElementById("badge-status-texto"),
   // Painel central da conversa — serve para o efeito de brilho (`.pensando`).
   painel: document.querySelector(".chat"),
   // Slider de criatividade (temperatura do modelo).
@@ -300,6 +303,30 @@ function removeTyping() {
   if (t) t.parentElement.remove();
 }
 
+// ---------- distintivo de status ----------
+// "canónico" -> "canonico" (para o atributo data-status do CSS), sem acentos.
+function statusSlug(status) {
+  const s = String(status || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+  if (!s) return "";
+  return s.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+// Selo ao lado do nome: texto, cor e visibilidade acompanham o Mestre ativo.
+function atualizarBadge(m) {
+  if (!els.badge) return;
+  if (!m || !m.status) {
+    els.badge.hidden = true;
+    return;
+  }
+  els.badge.hidden = false;
+  els.badge.dataset.status = statusSlug(m.status);
+  if (els.badgeTexto) els.badgeTexto.textContent = m.status;
+}
+
 // ---------- sugestões rápidas ----------
 // Três perguntas por Mestre (vêm de /api/masters em "suggestions").
 // Clicar numa pílula escreve no campo e põe o cursor pronto a enviar.
@@ -370,6 +397,7 @@ function selectMaster(id) {
   els.dot.style.background = m.color;
   els.dot.style.boxShadow = "0 0 12px " + m.color;
   els.name.textContent = m.name;
+  atualizarBadge(m);
   atualizarEstado();
   atualizarSliderTemp();
   // Painel de biografia aberto? Passa a mostrar o novo Mestre.
