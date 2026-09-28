@@ -1189,3 +1189,140 @@ body {
 @media (max-width: 400px) {
   .reacoes-grelha { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ---------- mobile: header + gaveta de Mestres ---------- */
+/* Base em todos os tamanhos: escondidos. Só o @media 768px os liga, para o
+   desktop ficar exatamente como estava. */
+.mobile-header { display: none; }
+.sidebar-backdrop { display: none; }
+
+/* ---------- telemóvel / tablet (≤768px): ecrã cheio + gaveta ---------- */
+@media (max-width: 768px) {
+  /* Header mobile: hambúrguer à esquerda, nome do Mestre ao centro. */
+  .mobile-header {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 900;
+    margin: 12px 0 0; padding: 7px 8px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(9, 11, 28, .85);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow);
+  }
+  .menu-btn {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    font-size: 1.15rem; line-height: 1;
+    color: var(--ink);
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .18s, border-color .18s, background .18s;
+  }
+  .menu-btn:hover,
+  body.sidebar-open .menu-btn {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .mobile-name {
+    min-width: 0; text-align: center;
+    font-family: var(--mono); font-size: .62rem;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mobile-brand {
+    font-family: var(--mono); font-size: .5rem;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: var(--muted); opacity: .8;
+  }
+
+  /* O header mobile substitui o hero: o chat fica com o ecrã todo. */
+  .hero { display: none; }
+
+  /* Painel de chat: 100% da largura, margem 0, 12px de folga. */
+  .layout { flex: 1; min-height: 0; padding: 12px; gap: 12px; }
+  .chat { flex: 1; min-height: 0; width: 100%; margin: 0; border-radius: 16px; }
+
+  /* Gaveta de Mestres: fixa à esquerda, fora do ecrã até o ☰ abrir. */
+  .sidebar {
+    position: fixed; left: 0; top: 0;
+    width: 280px; height: 100vh;
+    z-index: 1000;
+    padding: 16px 14px calc(14px + env(safe-area-inset-bottom));
+    transform: translateX(-100%);
+    transition: transform .3s ease;
+    overflow: hidden;
+    background: linear-gradient(200deg, rgba(14, 16, 38, .97), rgba(7, 8, 20, .99));
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    backdrop-filter: blur(20px) saturate(1.2);
+    border-right: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow: 26px 0 60px rgba(0, 0, 0, .6);
+  }
+  body.sidebar-open .sidebar { transform: translateX(0); }
+  .side-head { margin: 0 0 10px; }
+  .side-count { display: block; }
+  /* Lista volta a ser vertical (no ≤820px ficara numa tira horizontal). */
+  .master-list {
+    flex-direction: column; flex-wrap: wrap;
+    gap: 7px;
+    overflow-x: hidden; overflow-y: auto;
+    padding-right: 4px; padding-bottom: 4px;
+  }
+  .master {
+    width: 100%; min-width: 0; min-height: 44px;
+    padding: 11px 12px; font-size: .88rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .master:hover { transform: none; }
+  .master .badge { display: inline-flex; }
+
+  /* Scrim: escurece o fundo enquanto a gaveta está aberta. */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(4, 6, 18, .62);
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s ease;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+  body.sidebar-open .sidebar-backdrop {
+    opacity: 1; pointer-events: auto;
+  }
+
+  /* Toque: nenhuma ação abaixo de 44px; o slider vai para linha própria. */
+  .composer { padding: 10px 12px; gap: 8px; }
+  .composer button,
+  .composer .anexo-btn {
+    min-width: 44px; min-height: 44px;
+    padding: 10px 14px;
+    justify-content: center;
+  }
+  .composer textarea { min-height: 44px; font-size: 16px; }
+  .anexo-remover { width: 44px; height: 44px; flex: 0 0 44px; }
+  .anexo { margin: 10px 12px 0; max-width: calc(100% - 24px); }
+  .sugestoes { padding: 10px 12px 0; }
+  .acoes {
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+  .acao {
+    min-height: 44px; padding: 10px 14px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .criatividade {
+    order: 3; flex: 1 0 100%;
+    width: 100%; margin-left: 0;
+    justify-content: space-between;
+    min-height: 44px; padding: 6px 12px;
+    border-radius: 14px;
+  }
+  .criatividade-range { flex: 1; width: auto; height: 44px; }
+}

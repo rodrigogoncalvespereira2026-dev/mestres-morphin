@@ -93,6 +93,12 @@ Ao trocar de Mestre, o painel central e o distintivo dão um rápido
 `ai/style.css`): o `selectMaster` põe a classe `.sintonizar` e retira-a
 no `animationend`, deixando a interface estável outra vez.
 
+Em ecrãs até **768px** a app vira mobile: o título dá lugar a um **header com
+☰ e o nome do Mestre**, a lista passa a **gaveta fixa de 280px** fora do ecrã
+(`transform: translateX(-100%)`, `.sidebar-open` no `<body>`, scrim e fecha ao
+clicar fora/ao escolher um Mestre), o chat ocupa o ecrã todo e as ações têm
+no mínimo **44px** de área de toque — com a Criatividade numa linha própria.
+
 ### Como correr
 
 1. Copia `.env.example` para `.env.local` e preenche `OPENAI_API_KEY`.

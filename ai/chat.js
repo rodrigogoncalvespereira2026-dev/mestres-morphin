@@ -14,6 +14,8 @@ const state = {
   autoSpeak: true,
   // Ficheiro escolhido (ainda não enviado) — nunca é guardado no localStorage.
   anexo: null,
+  // Gaveta de Mestres aberta no mobile (classe .sidebar-open no <body>).
+  sidebarOpen: false,
 };
 
 const els = {
@@ -59,6 +61,10 @@ const els = {
   anexoNome: document.getElementById("anexo-nome"),
   anexoDetalhe: document.getElementById("anexo-detalhe"),
   anexoRemover: document.getElementById("anexo-remover"),
+  // Header mobile (☰) e gaveta de Mestres — só ativos em ecrãs estreitos.
+  menuBtn: document.getElementById("menu-btn"),
+  mobileName: document.getElementById("mobile-name"),
+  sidebar: document.querySelector(".sidebar"),
 };
 
 // ---------- helpers ----------
@@ -437,6 +443,8 @@ function selectMaster(id) {
   guardarEstado();
   const m = activeMaster();
   if (!m) return;
+  // Mobile: escolher um Mestre fecha a gaveta automaticamente.
+  fecharSidebar();
   document.documentElement.style.setProperty("--accent", m.color);
   cara?.estado("espera");
   cara?.cor(m.color);
@@ -445,6 +453,8 @@ function selectMaster(id) {
   els.dot.style.background = m.color;
   els.dot.style.boxShadow = "0 0 12px " + m.color;
   els.name.textContent = m.name;
+  // Header mobile espelha o nome do Mestre ativo.
+  if (els.mobileName) els.mobileName.textContent = m.name;
   atualizarBadge(m);
   atualizarEstado();
   atualizarSliderTemp();
@@ -486,6 +496,41 @@ function renderMessages() {
   }
   scrollDown();
 }
+
+// ---------- gaveta de Mestres (mobile) ----------
+// Em ecrãs ≤768px a lista vive numa gaveta fixa à esquerda (CSS). Aqui só
+// trocamos a classe .sidebar-open no <body>: o ☰ abre/fecha, clicar fora
+// (inclusive no scrim) fecha, e escolher um Mestre fecha no selectMaster.
+function abrirSidebar() {
+  document.body.classList.add("sidebar-open");
+  state.sidebarOpen = true;
+  if (els.menuBtn) els.menuBtn.setAttribute("aria-expanded", "true");
+}
+
+function fecharSidebar() {
+  document.body.classList.remove("sidebar-open");
+  state.sidebarOpen = false;
+  if (els.menuBtn) els.menuBtn.setAttribute("aria-expanded", "false");
+}
+
+function alternarSidebar() {
+  if (state.sidebarOpen) fecharSidebar();
+  else abrirSidebar();
+}
+
+if (els.menuBtn) {
+  els.menuBtn.addEventListener("click", () => alternarSidebar());
+}
+
+// Clicar fora da gaveta fecha-a (o clique do ☰ é ignorado para não fechar
+// logo a seguir a abrir).
+document.addEventListener("click", (e) => {
+  if (!state.sidebarOpen) return;
+  const alvo = e.target;
+  if (els.sidebar && els.sidebar.contains(alvo)) return;
+  if (els.menuBtn && els.menuBtn.contains(alvo)) return;
+  fecharSidebar();
+});
 
 // ---------- anexo (imagem / texto) ----------
 // Imagem → Base64 (data URL) no payload; .txt/.md → conteúdo de texto.
@@ -950,7 +995,13 @@ els.loreFechar.addEventListener("click", () => {
   els.name.focus();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && els.lore.classList.contains("aberto")) fecharLore();
+  if (e.key !== "Escape") return;
+  // Primeiro a gaveta mobile, depois o painel de biografia.
+  if (state.sidebarOpen) {
+    fecharSidebar();
+    return;
+  }
+  if (els.lore.classList.contains("aberto")) fecharLore();
 });
 
 // ---------- boot ----------

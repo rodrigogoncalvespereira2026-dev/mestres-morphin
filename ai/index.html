@@ -28,7 +28,19 @@
   <div class="fx-orb fx-orb--mestre"></div>
 </div>
 
+<!-- Scrim da gaveta mobile: clicar fora fecha a lista de Mestres -->
+<div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
 <div class="app">
+  <!-- Header mobile: só aparece em ecrãs estreitos (ver @media 768px) -->
+  <header id="mobile-header" class="mobile-header">
+    <button id="menu-btn" class="menu-btn" type="button"
+            aria-label="Abrir a lista de Mestres"
+            aria-controls="master-list" aria-expanded="false">☰</button>
+    <span id="mobile-name" class="mobile-name">Mestre Morphin</span>
+    <span class="mobile-brand" aria-hidden="true">IA</span>
+  </header>
+
   <header class="hero">
     <p class="kicker"><span class="led"></span> Power Rangers Primal Force</p>
     <h1>Mestres Morphin <span class="thin">/ IA</span></h1>
