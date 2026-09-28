@@ -89,7 +89,23 @@
       <!-- Sugestões rápidas do Mestre ativo: clicar preenche o campo -->
       <div id="sugestoes" class="sugestoes" role="group"
            aria-label="Sugestões rápidas"></div>
+      <!-- Anexo: miniatura/indicador do ficheiro escolhido, acima do campo -->
+      <div id="anexo-chip" class="anexo" hidden>
+        <img id="anexo-miniatura" class="anexo-miniatura" alt="" hidden>
+        <span id="anexo-icone" class="anexo-icone" aria-hidden="true">📄</span>
+        <span class="anexo-info">
+          <b id="anexo-nome" class="anexo-nome"></b>
+          <small id="anexo-detalhe" class="anexo-detalhe"></small>
+        </span>
+        <button id="anexo-remover" class="anexo-remover" type="button"
+                aria-label="Remover anexo">✕</button>
+      </div>
       <form id="chat-form" class="composer" autocomplete="off">
+        <input id="anexo-input" type="file" hidden
+               accept="image/*,.txt,.md,text/plain,text/markdown">
+        <button id="anexo-btn" class="anexo-btn" type="button"
+                title="Anexar imagem, .txt ou .md"
+                aria-label="Anexar ficheiro">📎</button>
         <textarea id="input" rows="1" placeholder="Fala com o Mestre…"
           aria-label="A tua mensagem"></textarea>
         <button id="send-btn" type="submit" disabled>

@@ -12,6 +12,8 @@ const state = {
   speaking: false,
   listening: false,
   autoSpeak: true,
+  // Ficheiro escolhido (ainda não enviado) — nunca é guardado no localStorage.
+  anexo: null,
 };
 
 const els = {
@@ -48,6 +50,15 @@ const els = {
   loreErro: document.getElementById("lore-erro"),
   loreTexto: document.getElementById("lore-texto"),
   loreFechar: document.getElementById("lore-fechar"),
+  // Anexo de ficheiro (imagem / .txt / .md) junto à mensagem.
+  anexoBtn: document.getElementById("anexo-btn"),
+  anexoInput: document.getElementById("anexo-input"),
+  anexoChip: document.getElementById("anexo-chip"),
+  anexoMini: document.getElementById("anexo-miniatura"),
+  anexoIcone: document.getElementById("anexo-icone"),
+  anexoNome: document.getElementById("anexo-nome"),
+  anexoDetalhe: document.getElementById("anexo-detalhe"),
+  anexoRemover: document.getElementById("anexo-remover"),
 };
 
 // ---------- helpers ----------
@@ -437,15 +448,132 @@ function renderMessages() {
   scrollDown();
 }
 
+// ---------- anexo (imagem / texto) ----------
+// Imagem → Base64 (data URL) no payload; .txt/.md → conteúdo de texto.
+// Os limites espelham os do app.py para falhar cedo e sem rede.
+const ANEXO_MAX_IMAGEM = 4 * 1024 * 1024; // bytes
+const ANEXO_MAX_TEXTO = 6000; // caracteres (cortado, tal como o servidor)
+
+function anexoTipo(ficheiro) {
+  if (!ficheiro) return null;
+  const nome = String(ficheiro.name || "").toLowerCase();
+  const tipo = String(ficheiro.type || "").toLowerCase();
+  if (tipo.startsWith("image/")) return "imagem";
+  if (nome.endsWith(".txt") || nome.endsWith(".md")) return "texto";
+  if (tipo === "text/plain" || tipo === "text/markdown") return "texto";
+  return null;
+}
+
+function anexoLerImagem(ficheiro) {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onload = () => resolve(String(leitor.result || ""));
+    leitor.onerror = () => reject(new Error("Não consegui ler essa imagem."));
+    leitor.onabort = () => reject(new Error("Leitura da imagem cancelada."));
+    leitor.readAsDataURL(ficheiro);
+  });
+}
+
+async function anexoCarregar(ficheiro) {
+  const kind = anexoTipo(ficheiro);
+  if (!kind) throw new Error("Só aceito imagens, .txt ou .md.");
+  const nome = String(ficheiro.name || "ficheiro");
+  if (kind === "imagem") {
+    if ((ficheiro.size || 0) > ANEXO_MAX_IMAGEM) {
+      throw new Error("Imagem demasiado grande — máximo 4 MB.");
+    }
+    const dataUrl = await anexoLerImagem(ficheiro);
+    if (!/^data:image\//i.test(dataUrl)) throw new Error("Imagem inválida.");
+    return {
+      kind: "imagem",
+      name: nome,
+      mime: String(ficheiro.type || "image/png"),
+      dataUrl,
+    };
+  }
+  const texto = typeof ficheiro.text === "function" ? String(await ficheiro.text()) : "";
+  if (!texto.trim()) throw new Error("O ficheiro de texto está vazio.");
+  const cortado = texto.length > ANEXO_MAX_TEXTO;
+  return {
+    kind: "texto",
+    name: nome,
+    mime: String(ficheiro.type || "text/plain"),
+    text: cortado ? texto.slice(0, ANEXO_MAX_TEXTO) + "\n[…cortado]" : texto,
+  };
+}
+
+function anexoMostrar(anexo) {
+  state.anexo = anexo;
+  if (!els.anexoChip) return;
+  const imagem = anexo.kind === "imagem";
+  els.anexoMini.hidden = !imagem;
+  els.anexoIcone.hidden = imagem;
+  if (imagem) {
+    els.anexoMini.src = anexo.dataUrl;
+    els.anexoMini.alt = anexo.name;
+  } else if (typeof els.anexoMini.removeAttribute === "function") {
+    els.anexoMini.removeAttribute("src");
+    els.anexoMini.alt = "";
+  }
+  els.anexoNome.textContent = anexo.name;
+  els.anexoDetalhe.textContent = imagem
+    ? anexo.mime.replace("image/", "") + " · imagem"
+    : "texto · " + anexo.text.length + " caracteres";
+  els.anexoChip.hidden = false;
+  updateSend();
+}
+
+function anexoLimpar() {
+  state.anexo = null;
+  if (els.anexoChip) {
+    els.anexoChip.hidden = true;
+    els.anexoNome.textContent = "";
+    els.anexoDetalhe.textContent = "";
+    els.anexoMini.hidden = true;
+    els.anexoIcone.hidden = false;
+    if (typeof els.anexoMini.removeAttribute === "function") {
+      els.anexoMini.removeAttribute("src");
+    }
+  }
+  updateSend();
+}
+
+if (els.anexoBtn && els.anexoInput) {
+  els.anexoBtn.addEventListener("click", () => els.anexoInput.click());
+  els.anexoInput.addEventListener("change", async () => {
+    const ficheiro = els.anexoInput.files && els.anexoInput.files[0];
+    try {
+      els.anexoInput.value = ""; // permite voltar a escolher o mesmo ficheiro
+    } catch (e) {
+      /* alguns navegadores não deixam limpar */
+    }
+    if (!ficheiro) return;
+    try {
+      anexoMostrar(await anexoCarregar(ficheiro));
+    } catch (err) {
+      anexoLimpar();
+      toast(err.message || "Não consegui ler o ficheiro.");
+    }
+  });
+}
+if (els.anexoRemover) {
+  els.anexoRemover.addEventListener("click", () => {
+    anexoLimpar();
+    els.anexoBtn?.focus();
+  });
+}
+
 // ---------- send ----------
 async function send() {
   const text = els.input.value.trim();
   const master = activeMaster();
-  if (!text || !master || state.busy) return;
+  const anexo = state.anexo || null;
+  if ((!text && !anexo) || !master || state.busy) return;
 
   const hist = (state.histories[master.id] = state.histories[master.id] || []);
   hist.push({ role: "user", content: text });
   guardarEstado();
+  anexoLimpar(); // o anexo segue no payload desta mensagem
   els.input.value = "";
   resizeInput();
   renderMessages();
@@ -463,6 +591,7 @@ async function send() {
         masterId: master.id,
         messages: hist,
         temperature: temperaturaAtiva(),
+        attachment: anexo || undefined,
       }),
     });
     const data = await resp.json().catch(() => ({}));
@@ -503,8 +632,9 @@ async function send() {
 
 function updateSend() {
   const master = activeMaster();
-  const canSend =
-    state.configured && master && !state.busy && els.input.value.trim().length > 0;
+  const podeEnviar =
+    els.input.value.trim().length > 0 || !!state.anexo;
+  const canSend = state.configured && master && !state.busy && podeEnviar;
   els.send.disabled = !canSend;
 }
 

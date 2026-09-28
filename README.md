@@ -81,6 +81,13 @@ Clicar no **nome do Mestre** (cabeçalho do chat) abre o painel lateral de
 texto limpo em `GET /api/masters/<id>/lore`, e o painel desliza da direita
 com fundo translúcido e brilho na cor do Mestre. `Esc` ou o `✕` fecham.
 
+O botão **📎** (à esquerda do campo) anexa um ficheiro à mensagem: **imagens**
+(vão em Base64 no `"attachment"` do `POST /api/chat` e chegam ao modelo em
+formato multimodal `image_url`; se o modelo não aceitar imagens, o servidor
+repete o pedido só com texto e avisa) e **.txt/.md** (entram como bloco
+`[ANEXO: …]` na última mensagem). Um chip com miniatura, nome e `✕` aparece
+acima da barra até enviar ou remover — nunca fica guardado no navegador.
+
 ### Como correr
 
 1. Copia `.env.example` para `.env.local` e preenche `OPENAI_API_KEY`.

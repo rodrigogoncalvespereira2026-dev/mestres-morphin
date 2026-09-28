@@ -4,7 +4,11 @@
 Serve o frontend em ./ai e expõe:
     GET  /api/masters          -> lista de Mestres + estado da configuração
     GET  /api/masters/<id>/lore -> biografia do Mestre (markdown + texto limpo)
-    POST /api/chat             -> {masterId, messages, temperature} -> {reply}
+    POST /api/chat             -> {masterId, messages, temperature, attachment?} -> {reply}
+
+    O anexo (opcional) é {"kind": "imagem"|"texto", "name", "dataUrl"|"text"}:
+    texto entra como bloco na última mensagem do utilizador; imagem é enviada
+    ao modelo em formato multimodal (image_url, compatível com llama.cpp/Ollama).
 
 Configuração (nunca comitada): ficheiro .env.local na raiz, ou variáveis
 de ambiente (as variáveis de ambiente têm precedência):
@@ -17,6 +21,7 @@ Uso:  python app.py [porta]     (porta por omissão: 8787 ou $PORT)
 """
 from __future__ import annotations
 
+import base64
 import json
 import os
 import pathlib
@@ -397,6 +402,109 @@ def sanitizar_temperatura(valor) -> float:
         return TEMP_PADRAO
     return max(TEMP_MIN, min(TEMP_MAX, t))
 
+
+# Anexos de mensagem (imagem em Base64 / texto de .txt ou .md).
+MAX_PEDIDO = 6 * 1024 * 1024          # corpo máximo do POST (com anexo)
+ANEXO_MAX_IMAGEM = 4 * 1024 * 1024    # bytes da imagem decodificada
+ANEXO_MAX_TEXTO = 6000                # caracteres do texto anexado
+ANEXO_MIME_IMAGEM = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+_ANEXO_DATA_URL = re.compile(r"^data:(image/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$")
+
+
+def sanitizar_anexo(anexo):
+    """Valida o anexo do navegador e devolve-o normalizado (ou None).
+
+    Imagem: data URL Base64, MIME suportado, dentro do limite de tamanho.
+    Texto: conteúdo já truncado ao limite.
+    Qualquer coisa fora destas regras levanta ValueError -> 400.
+    """
+    if anexo is None:
+        return None
+    if not isinstance(anexo, dict):
+        raise ValueError("anexo inválido")
+    kind = anexo.get("kind")
+    nome = anexo.get("name")
+    nome = (nome if isinstance(nome, str) and nome.strip() else "ficheiro")[:120]
+
+    if kind == "imagem":
+        data_url = anexo.get("dataUrl")
+        if not isinstance(data_url, str):
+            raise ValueError("imagem sem dados")
+        m = _ANEXO_DATA_URL.match(data_url)
+        if not m:
+            raise ValueError("imagem em formato inválido")
+        mime = m.group(1).lower()
+        if mime not in ANEXO_MIME_IMAGEM:
+            raise ValueError(f"tipo de imagem não suportado: {mime}")
+        b64 = m.group(2)
+        if len(b64) * 3 // 4 > ANEXO_MAX_IMAGEM:
+            raise ValueError("imagem demasiado grande (máx. 4 MB)")
+        try:
+            base64.b64decode(b64, validate=True)
+        except (ValueError, TypeError) as exc:  # binascii.Error herda de ValueError
+            raise ValueError("imagem em Base64 inválida") from exc
+        return {"kind": "imagem", "name": nome, "mime": mime,
+                "dataUrl": f"data:{mime};base64,{b64}"}
+
+    if kind == "texto":
+        texto = anexo.get("text")
+        if not isinstance(texto, str) or not texto.strip():
+            raise ValueError("texto anexado vazio")
+        return {"kind": "texto", "name": nome, "text": texto[:ANEXO_MAX_TEXTO]}
+
+    raise ValueError("anexo inválido")
+
+
+def aplicar_anexo(mensagens: list[dict], anexo: dict | None) -> tuple[list[dict], bool]:
+    """Junta o anexo à última mensagem do utilizador (cópia, não muta).
+
+    Devolve (mensagens para o modelo, True quando levam imagem). O texto entra
+    como bloco delimitado; a imagem mapeia para o formato multimodal
+    [{"type":"text"}, {"type":"image_url"}] aceite pelo llama.cpp/Ollama.
+    """
+    if not anexo:
+        return mensagens, False
+    copia = [dict(m) for m in mensagens]
+    alvo = None
+    for i in range(len(copia) - 1, -1, -1):
+        if copia[i].get("role") == "user":
+            alvo = i
+            break
+    if alvo is None:
+        copia.append({"role": "user", "content": ""})
+        alvo = len(copia) - 1
+
+    if anexo["kind"] == "texto":
+        bloco = f"\n\n[ANEXO: {anexo['name']}]\n{anexo['text']}\n[/ANEXO]"
+        copia[alvo]["content"] = copia[alvo].get("content", "") + bloco
+        return copia, False
+
+    copia[alvo]["content"] = [
+        {"type": "text", "text": copia[alvo].get("content", "")},
+        {"type": "image_url", "image_url": {"url": anexo["dataUrl"]}},
+    ]
+    return copia, True
+
+
+def anexo_sem_imagem(mensagens: list[dict], anexo: dict) -> list[dict]:
+    """Fallback: modelo sem visão -> nota de texto no lugar da imagem."""
+    copia = [dict(m) for m in mensagens]
+    nota = (
+        f'\n\n[O utilizador anexou a imagem "{anexo["name"]}", mas este modelo '
+        "não consegue ver imagens. Responde só ao texto e diz que não podes "
+        "analisar a imagem.]"
+    )
+    for i in range(len(copia) - 1, -1, -1):
+        conteudo = copia[i].get("content")
+        if isinstance(conteudo, list):
+            texto = " ".join(
+                p.get("text", "") for p in conteudo
+                if isinstance(p, dict) and p.get("type") == "text"
+            )
+            copia[i]["content"] = texto + nota
+            break
+    return copia
+
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
@@ -616,7 +724,7 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length") or 0)
         except ValueError:
             length = 0
-        if length <= 0 or length > 1_000_000:
+        if length <= 0 or length > MAX_PEDIDO:
             self._json(400, {"error": "pedido inválido"})
             return
         try:
@@ -643,14 +751,37 @@ class Handler(BaseHTTPRequestHandler):
                 return
             clean.append({"role": role, "content": content[:4000]})
 
+        try:
+            anexo = sanitizar_anexo(body.get("attachment"))
+        except ValueError as exc:
+            self._json(400, {"error": str(exc)})
+            return
+        mensagens, tem_imagem = aplicar_anexo(clean, anexo)
+
         temperatura = sanitizar_temperatura(body.get("temperature"))
 
         try:
             system_prompt = read_prompt(master_id)
-            reply = call_llm(system_prompt, clean, temperatura)
+            reply = call_llm(system_prompt, mensagens, temperatura)
         except ConfigError as exc:
-            self._json(502 if exc.code != "missing_key" else 503, {"error": exc.message, "code": exc.code})
-            return
+            if tem_imagem and anexo and exc.code == "provider":
+                # O modelo não aceita imagens: repete sem elas, com nota de texto.
+                try:
+                    reply = call_llm(
+                        system_prompt, anexo_sem_imagem(mensagens, anexo), temperatura
+                    )
+                except ConfigError as exc2:
+                    self._json(502 if exc2.code != "missing_key" else 503,
+                               {"error": exc2.message, "code": exc2.code})
+                    return
+                except Exception as exc2:
+                    print(f"[erro] {exc2!r}", flush=True)
+                    self._json(500, {"error": f"Erro interno: {exc2}"})
+                    return
+            else:
+                self._json(502 if exc.code != "missing_key" else 503,
+                           {"error": exc.message, "code": exc.code})
+                return
         except Exception as exc:  # inesperado — não deixar morrer o servidor
             print(f"[erro] {exc!r}", flush=True)
             self._json(500, {"error": f"Erro interno: {exc}"})
