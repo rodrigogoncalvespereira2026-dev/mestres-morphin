@@ -24,6 +24,8 @@ const els = {
   vozBtn: document.getElementById("voz-btn"),
   vozTxt: document.getElementById("voz-txt"),
   vozIc: document.getElementById("voz-ic"),
+  // Painel central da conversa — serve para o efeito de brilho (`.pensando`).
+  painel: document.querySelector(".chat"),
 };
 
 // ---------- helpers ----------
@@ -292,6 +294,7 @@ function renderList() {
 
 function selectMaster(id) {
   state.activeId = id;
+  guardarEstado();
   const m = activeMaster();
   if (!m) return;
   document.documentElement.style.setProperty("--accent", m.color);
@@ -302,11 +305,7 @@ function selectMaster(id) {
   els.dot.style.background = m.color;
   els.dot.style.boxShadow = "0 0 12px " + m.color;
   els.name.textContent = m.name;
-  els.meta.textContent = state.configured
-    ? "Ligado · modelo " + state.model + " · " + (m.status === "canónico" ? "canónico" : "rascunho")
-    : m.status === "canónico"
-      ? "Cérebro canónico · prompt de sistema carregado."
-      : "Rascunho — prompt ainda por validar.";
+  atualizarEstado();
   for (const b of els.list.querySelectorAll(".master")) {
     b.classList.toggle("active", b.dataset.id === id);
   }
@@ -349,11 +348,13 @@ async function send() {
 
   const hist = (state.histories[master.id] = state.histories[master.id] || []);
   hist.push({ role: "user", content: text });
+  guardarEstado();
   els.input.value = "";
   resizeInput();
   renderMessages();
   state.busy = true;
   updateSend();
+  atualizarEstado();
   cara?.estado("pensar");
   typingIndicator();
 
@@ -369,6 +370,7 @@ async function send() {
     }
     removeTyping();
     hist.push({ role: "assistant", content: data.reply || "" });
+    guardarEstado();
     renderMessages();
     cara?.estado("espera");
     cara?.humor(data.reply);
@@ -393,6 +395,7 @@ async function send() {
   } finally {
     state.busy = false;
     updateSend();
+    atualizarEstado();
     els.input.focus();
   }
 }
@@ -409,8 +412,71 @@ function resizeInput() {
   els.input.style.height = Math.min(els.input.scrollHeight, 140) + "px";
 }
 
+// ---------- persistência (localStorage) ----------
+// O Mestre escolhido e as conversas ficam guardados no navegador: recarregar a
+// página não apaga as mensagens nem volta ao primeiro Mestre da lista.
+const CHAVE_ATIVO = "mestres-morphin:mestre-ativo";
+const CHAVE_HISTORIAS = "mestres-morphin:historias";
+
+function guardarEstado() {
+  try {
+    if (state.activeId) localStorage.setItem(CHAVE_ATIVO, state.activeId);
+    localStorage.setItem(CHAVE_HISTORIAS, JSON.stringify(state.histories));
+  } catch (_) {
+    // Modo privado / armazenamento cheio — a app continua a funcionar em memória.
+  }
+}
+
+function carregarEstado() {
+  try {
+    const ativo = localStorage.getItem(CHAVE_ATIVO);
+    if (ativo) state.activeId = ativo;
+    const guardadas = JSON.parse(localStorage.getItem(CHAVE_HISTORIAS) || "{}");
+    if (guardadas && typeof guardadas === "object" && !Array.isArray(guardadas)) {
+      // Só aceita mensagens com o formato esperado: um histórico estragado no
+      // navegador não pode partir o ecrã no arranque.
+      const limpas = {};
+      for (const [id, msgs] of Object.entries(guardadas)) {
+        if (!Array.isArray(msgs)) continue;
+        limpas[id] = msgs.filter(
+          (m) =>
+            m &&
+            typeof m === "object" &&
+            (m.role === "user" || m.role === "assistant") &&
+            typeof m.content === "string"
+        );
+      }
+      state.histories = limpas;
+    }
+  } catch (_) {
+    // Histórico ilegível — começa limpo.
+  }
+}
+
+// ---------- estado visível (status + brilho do painel) ----------
+function textoEstado() {
+  const m = activeMaster();
+  if (!m) return "";
+  if (state.busy) return "A meditar na Rede Morphin...";
+  return state.configured
+    ? "Ligado · modelo " + state.model + " · " + (m.status === "canónico" ? "canónico" : "rascunho")
+    : m.status === "canónico"
+      ? "Cérebro canónico · prompt de sistema carregado."
+      : "Rascunho — prompt ainda por validar.";
+}
+
+function atualizarEstado() {
+  if (els.meta) {
+    els.meta.textContent = textoEstado();
+    els.meta.classList.toggle("meditar", state.busy);
+  }
+  // O painel central acende na cor do Mestre enquanto ele medita.
+  if (els.painel) els.painel.classList.toggle("pensando", state.busy);
+}
+
 // ---------- boot ----------
 async function boot() {
+  carregarEstado();
   try {
     const resp = await fetch("/api/masters");
     const data = await resp.json();
@@ -421,7 +487,13 @@ async function boot() {
       els.banner.classList.remove("hidden");
     }
     renderList();
-    if (state.masters.length) selectMaster(state.masters[0].id);
+    // Mestre guardado no navegador; se já não existir, cai para o primeiro.
+    const guardado = state.masters.some((m) => m.id === state.activeId);
+    if (state.masters.length) {
+      selectMaster(guardado ? state.activeId : state.masters[0].id);
+    }
+    const contador = document.querySelector(".side-count");
+    if (contador) contador.textContent = state.masters.length + " desenvolvidos";
   } catch (err) {
     toast("Não consigo contactar o servidor: " + err.message);
   }
@@ -445,6 +517,7 @@ els.input.addEventListener("keydown", (e) => {
 document.getElementById("clear-btn").addEventListener("click", () => {
   if (!state.activeId) return;
   delete state.histories[state.activeId];
+  guardarEstado();
   stopSpeaking();
   cara?.estado("espera");
   renderMessages();

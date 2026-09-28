@@ -268,8 +268,35 @@ body {
     var(--panel-2);
   -webkit-backdrop-filter: blur(18px) saturate(120%);
   backdrop-filter: blur(18px) saturate(120%);
-  box-shadow: var(--shadow);
+  /* Brilho suave na cor do Mestre (--accent), que muda sozinho ao trocar de Mestre. */
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 0 38px -14px color-mix(in srgb, var(--accent) 65%, transparent);
+  transition: box-shadow .5s ease;
   overflow: hidden;
+}
+
+/* Enquanto o Mestre medita (state.busy), o painel central acende e pulsa. */
+.chat.pensando {
+  animation: chatMedita 2.6s ease-in-out infinite;
+}
+@keyframes chatMedita {
+  0%, 100% {
+    box-shadow:
+      var(--shadow),
+      0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent),
+      0 0 44px -12px color-mix(in srgb, var(--accent) 75%, transparent);
+  }
+  50% {
+    box-shadow:
+      var(--shadow),
+      0 0 0 1px color-mix(in srgb, var(--accent) 62%, transparent),
+      0 0 78px -6px color-mix(in srgb, var(--accent) 95%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat.pensando { animation: none; }
 }
 
 .chat-header {
@@ -359,6 +386,19 @@ body {
 .chat-header .meta {
   margin: 3px 0 0; color: var(--muted);
   font-family: var(--mono); font-size: .64rem; letter-spacing: .06em;
+  transition: color .3s ease;
+}
+/* Status de meditação: a linha passa a brilhar na cor do Mestre. */
+.chat-header .meta.meditar {
+  color: var(--accent);
+  animation: meditaPulso 2.6s ease-in-out infinite;
+}
+@keyframes meditaPulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-header .meta.meditar { animation: none; }
 }
 
 .messages {
