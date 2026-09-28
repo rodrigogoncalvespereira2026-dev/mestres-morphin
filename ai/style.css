@@ -554,6 +554,68 @@ body {
 /* O atributo `hidden` tem de ganhar às classes (autor sobrepõe-se ao browser). */
 [hidden] { display: none !important; }
 
+/* ---------- criatividade (slider de temperatura por Mestre) ---------- */
+
+.criatividade {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-left: auto;              /* canto direito da barra, discreto */
+  font-family: var(--mono); font-size: .62rem;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  transition: border-color .18s, box-shadow .18s;
+}
+.criatividade:hover,
+.criatividade:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+/* Largura fixa: o rótulo cresce (0.0 -> 1.5) sem fazer a barra tremer. */
+.criatividade-rotulo {
+  min-width: 12ch;
+  color: var(--muted);
+  transition: color .2s ease;
+}
+.criatividade:focus-within .criatividade-rotulo,
+.criatividade:hover .criatividade-rotulo { color: var(--accent); }
+
+.criatividade-range {
+  -webkit-appearance: none; appearance: none;
+  width: 112px; height: 4px; border-radius: 99px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--fill, 47%),
+    rgba(255, 255, 255, .14) var(--fill, 47%)
+  );
+  outline: none; cursor: pointer;
+}
+.criatividade-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 13px; height: 13px; border: 0; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 75%, transparent);
+  transition: transform .15s ease;
+}
+.criatividade-range::-webkit-slider-thumb:hover { transform: scale(1.18); }
+.criatividade-range::-moz-range-thumb {
+  width: 13px; height: 13px; border: 0; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 75%, transparent);
+}
+.criatividade-range::-moz-range-track {
+  height: 4px; border-radius: 99px;
+  background: rgba(255, 255, 255, .14);
+}
+.criatividade-range:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+@media (max-width: 760px) {
+  .criatividade { margin-left: 0; width: 100%; justify-content: space-between; }
+}
+
 /* ---------- toast ---------- */
 
 .toast {

@@ -3,7 +3,7 @@
 
 Serve o frontend em ./ai e expõe:
     GET  /api/masters          -> lista de Mestres + estado da configuração
-    POST /api/chat             -> {masterId, messages} -> {reply}
+    POST /api/chat             -> {masterId, messages, temperature} -> {reply}
 
 Configuração (nunca comitada): ficheiro .env.local na raiz, ou variáveis
 de ambiente (as variáveis de ambiente têm precedência):
@@ -275,6 +275,26 @@ API_KEY = cfg("OPENAI_API_KEY") or ""
 MODEL = cfg("OPENAI_MODEL", "gpt-4o-mini") or "gpt-4o-mini"
 TIMEOUT = 150
 
+# Slider de criatividade do frontend (0.0 = previsível, 1.5 = muito criativo).
+TEMP_PADRAO = 0.7
+TEMP_MIN = 0.0
+TEMP_MAX = 1.5
+
+
+def sanitizar_temperatura(valor) -> float:
+    """Limita a temperatura pedida pelo cliente a 0.0-1.5.
+
+    Falta ou lixo (string, NaN, null) cai no padrão: o valor vem do navegador
+    e nunca pode chegar tal e qual à API do modelo.
+    """
+    try:
+        t = float(valor)
+    except (TypeError, ValueError):
+        return TEMP_PADRAO
+    if t != t:  # NaN
+        return TEMP_PADRAO
+    return max(TEMP_MIN, min(TEMP_MAX, t))
+
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
@@ -297,7 +317,7 @@ def read_prompt(master_id: str) -> str:
     return prompt
 
 
-def call_llm(system_prompt: str, history: list[dict]) -> str:
+def call_llm(system_prompt: str, history: list[dict], temperature: float = TEMP_PADRAO) -> str:
     if not API_KEY:
         raise ConfigError("missing_key", "OPENAI_API_KEY não está definida. Cria o ficheiro .env.local na raiz do projeto (ver README) e reinicia o servidor.")
     url = (BASE_URL.rstrip("/") or "https://api.openai.com/v1") + "/chat/completions"
@@ -305,7 +325,7 @@ def call_llm(system_prompt: str, history: list[dict]) -> str:
     payload = {
         "model": MODEL,
         "messages": messages,
-        "temperature": 0.7,
+        "temperature": sanitizar_temperatura(temperature),
     }
     req = urllib.request.Request(
         url,
@@ -452,9 +472,11 @@ class Handler(BaseHTTPRequestHandler):
                 return
             clean.append({"role": role, "content": content[:4000]})
 
+        temperatura = sanitizar_temperatura(body.get("temperature"))
+
         try:
             system_prompt = read_prompt(master_id)
-            reply = call_llm(system_prompt, clean)
+            reply = call_llm(system_prompt, clean, temperatura)
         except ConfigError as exc:
             self._json(502 if exc.code != "missing_key" else 503, {"error": exc.message, "code": exc.code})
             return

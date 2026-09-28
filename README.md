@@ -71,6 +71,11 @@ A pasta `ai/` + o ficheiro `app.py` formam uma pequena aplicação web de chat
 conversas com ele. O servidor lê o ficheiro `.md` do Mestre e usa-o como
 *prompt de sistema* da conversa.
 
+No fundo da janela há um slider **Criatividade** (temperatura do modelo:
+0.0 = previsível, 1.5 = muito livre). O valor fica guardado por Mestre no
+navegador, vai no `POST /api/chat` em `"temperature"` e o servidor limita-o
+sempre aos limites antes de o mandar ao modelo.
+
 ### Como correr
 
 1. Copia `.env.example` para `.env.local` e preenche `OPENAI_API_KEY`.

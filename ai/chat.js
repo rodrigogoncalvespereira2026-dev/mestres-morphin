@@ -4,6 +4,7 @@ const state = {
   masters: [],
   activeId: null,
   histories: {}, // masterId -> [{role, content}]
+  temperaturas: {}, // masterId -> criatividade (0.0 - 1.5)
   busy: false,
   configured: false,
   speaking: false,
@@ -26,6 +27,9 @@ const els = {
   vozIc: document.getElementById("voz-ic"),
   // Painel central da conversa — serve para o efeito de brilho (`.pensando`).
   painel: document.querySelector(".chat"),
+  // Slider de criatividade (temperatura do modelo).
+  temp: document.getElementById("temp-range"),
+  tempRotulo: document.getElementById("temp-rotulo"),
 };
 
 // ---------- helpers ----------
@@ -306,6 +310,7 @@ function selectMaster(id) {
   els.dot.style.boxShadow = "0 0 12px " + m.color;
   els.name.textContent = m.name;
   atualizarEstado();
+  atualizarSliderTemp();
   for (const b of els.list.querySelectorAll(".master")) {
     b.classList.toggle("active", b.dataset.id === id);
   }
@@ -362,7 +367,11 @@ async function send() {
     const resp = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ masterId: master.id, messages: hist }),
+      body: JSON.stringify({
+        masterId: master.id,
+        messages: hist,
+        temperature: temperaturaAtiva(),
+      }),
     });
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
@@ -417,11 +426,27 @@ function resizeInput() {
 // página não apaga as mensagens nem volta ao primeiro Mestre da lista.
 const CHAVE_ATIVO = "mestres-morphin:mestre-ativo";
 const CHAVE_HISTORIAS = "mestres-morphin:historias";
+const CHAVE_TEMPERATURAS = "mestres-morphin:temperaturas";
+// Mesmos limites do slider (min 0.0 / max 1.5) e do backend.
+const TEMP_PADRAO = 0.7;
+const TEMP_MIN = 0;
+const TEMP_MAX = 1.5;
+
+function limitarTemperatura(valor) {
+  const n = typeof valor === "number" ? valor : parseFloat(valor);
+  if (!Number.isFinite(n)) return TEMP_PADRAO;
+  return Math.min(TEMP_MAX, Math.max(TEMP_MIN, n));
+}
+
+function temperaturaAtiva() {
+  return limitarTemperatura(state.temperaturas[state.activeId]);
+}
 
 function guardarEstado() {
   try {
     if (state.activeId) localStorage.setItem(CHAVE_ATIVO, state.activeId);
     localStorage.setItem(CHAVE_HISTORIAS, JSON.stringify(state.histories));
+    localStorage.setItem(CHAVE_TEMPERATURAS, JSON.stringify(state.temperaturas));
   } catch (_) {
     // Modo privado / armazenamento cheio — a app continua a funcionar em memória.
   }
@@ -448,6 +473,14 @@ function carregarEstado() {
       }
       state.histories = limpas;
     }
+    const temps = JSON.parse(localStorage.getItem(CHAVE_TEMPERATURAS) || "{}");
+    if (temps && typeof temps === "object" && !Array.isArray(temps)) {
+      const limpas = {};
+      for (const [id, v] of Object.entries(temps)) {
+        limpas[id] = limitarTemperatura(v);
+      }
+      state.temperaturas = limpas;
+    }
   } catch (_) {
     // Histórico ilegível — começa limpo.
   }
@@ -472,6 +505,17 @@ function atualizarEstado() {
   }
   // O painel central acende na cor do Mestre enquanto ele medita.
   if (els.painel) els.painel.classList.toggle("pensando", state.busy);
+}
+
+// ---------- slider de criatividade ----------
+function atualizarSliderTemp() {
+  if (!els.temp) return;
+  const t = temperaturaAtiva();
+  els.temp.value = String(t);
+  // Preenchimento da trilho até ao valor actual (--fill é lido pelo CSS).
+  const pct = ((t - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * 100;
+  els.temp.style.setProperty("--fill", pct.toFixed(1) + "%");
+  if (els.tempRotulo) els.tempRotulo.textContent = "Criatividade: " + t.toFixed(1);
 }
 
 // ---------- boot ----------
@@ -524,6 +568,17 @@ document.getElementById("clear-btn").addEventListener("click", () => {
   toast("Conversa reiniciada.");
   els.input.focus();
 });
+
+// Cada Mestre tem a sua própria criatividade, guardada no navegador.
+if (els.temp) {
+  els.temp.addEventListener("input", () => {
+    if (!state.activeId) return;
+    const t = Math.round(limitarTemperatura(parseFloat(els.temp.value)) * 10) / 10;
+    state.temperaturas[state.activeId] = t;
+    guardarEstado();
+    atualizarSliderTemp();
+  });
+}
 
 // Interruptor da voz: ligada/desligada.
 function atualizarBotaoVoz() {
